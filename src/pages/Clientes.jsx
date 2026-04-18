@@ -9,9 +9,9 @@ import Badge, { LangBadge, PackBadge } from '../components/Badge'
 import { Plus, FileText, Copy, Check, Loader2 } from 'lucide-react'
 
 const defaultForm = {
-  name: '', club: '', email: '', telefono: '', project_name: '',
-  pack: '4-3-3', custom_price: '', lang: 'es',
-  start_date: '', status: 'brief', notes: '',
+  name: '', club: '', email: '', telefono: '', puesto: '', project_name: '',
+  pack: '4-3-3', custom_price: '', payment_type: 'mensual', lang: 'es',
+  start_date: '', end_date: '', status: 'brief', notes: '',
 }
 
 export default function Clientes() {
@@ -48,11 +48,14 @@ export default function Clientes() {
       club:         item.club         ?? '',
       email:        item.email        ?? '',
       telefono:     item.telefono     ?? '',
+      puesto:       item.puesto       ?? '',
       project_name: item.project_name ?? '',
       pack:         item.pack         ?? '4-3-3',
       custom_price: item.custom_price != null ? String(item.custom_price) : '',
+      payment_type: item.payment_type ?? 'mensual',
       lang:         item.lang         ?? 'es',
       start_date:   item.start_date   ?? '',
+      end_date:     item.end_date     ?? '',
       status:       item.status,
       notes:        item.notes        ?? '',
     })
@@ -70,11 +73,14 @@ export default function Clientes() {
       club:         form.club,
       email:        form.email,
       telefono:     form.telefono,
+      puesto:       form.puesto,
       project_name: form.project_name,
       pack:         form.pack,
       custom_price: form.pack === 'otro' ? (Number(form.custom_price) || null) : null,
+      payment_type: form.pack === 'otro' ? form.payment_type : 'mensual',
       lang:         form.lang,
       start_date:   form.start_date || null,
+      end_date:     form.end_date || null,
       status:       form.status,
       notes:        form.notes,
     }
@@ -230,7 +236,7 @@ export default function Clientes() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Club</label>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Club / Agencia</label>
               <input
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 value={form.club}
@@ -265,6 +271,15 @@ export default function Clientes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Puesto</label>
+              <input
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                value={form.puesto}
+                onChange={e => setForm(f => ({ ...f, puesto: e.target.value }))}
+                placeholder="Director deportivo"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del proyecto</label>
               <input
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
@@ -273,6 +288,9 @@ export default function Clientes() {
                 placeholder="Nombre del proyecto"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha inicio</label>
               <input
@@ -280,6 +298,15 @@ export default function Clientes() {
                 className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 value={form.start_date}
                 onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha cierre</label>
+              <input
+                type="date"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                value={form.end_date}
+                onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
               />
             </div>
           </div>
@@ -313,16 +340,36 @@ export default function Clientes() {
           </div>
 
           {form.pack === 'otro' && (
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Precio personalizado ($/mes)</label>
-              <input
-                type="number"
-                min="0"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                value={form.custom_price}
-                onChange={e => setForm(f => ({ ...f, custom_price: e.target.value }))}
-                placeholder="Ej. 1500"
-              />
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Precio personalizado ({form.payment_type === 'unico' ? 'pago único' : '$/mes'})
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  value={form.custom_price}
+                  onChange={e => setForm(f => ({ ...f, custom_price: e.target.value }))}
+                  placeholder="Ej. 1500"
+                />
+              </div>
+              <div className="flex gap-2">
+                {[['mensual', 'Mensual'], ['unico', 'Pago único']].map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, payment_type: val }))}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      form.payment_type === val
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
