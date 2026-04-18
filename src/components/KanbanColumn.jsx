@@ -12,18 +12,18 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
-          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+          <span className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wider">
             {label}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5">
+          <span className="text-xs font-medium text-[#6b6b6b] bg-[#ebebeb] rounded-full px-2 py-0.5">
             {count ?? items.length}
           </span>
           {onAdd && (
             <button
               onClick={onAdd}
-              className="p-1 rounded-lg text-gray-400 hover:text-green-500 dark:hover:text-green-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[#9b9b9b] hover:text-[#eb5c37] hover:bg-[#eb5c37]/10 transition-colors cursor-pointer"
             >
               <Plus size={14} />
             </button>
@@ -34,10 +34,10 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex flex-col gap-2 min-h-[80px] rounded-xl p-2 transition-all duration-150
+        className={`flex flex-col gap-2 min-h-[80px] rounded-2xl p-2 transition-all duration-150
           ${isOver
-            ? 'bg-green-50 dark:bg-green-900/10 border-2 border-dashed border-green-400 dark:border-green-500'
-            : 'bg-gray-50 dark:bg-gray-900/50 border-2 border-transparent'
+            ? 'bg-[#eb5c37]/5 border-2 border-dashed border-[#eb5c37]'
+            : 'bg-[#ebebeb]/60 border-2 border-transparent'
           }
         `}
       >
@@ -47,7 +47,7 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
 
         {items.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
-            <p className="text-xs text-gray-300 dark:text-gray-600">Sin tarjetas</p>
+            <p className="text-xs text-[#c0c0c0]">Sin tarjetas</p>
           </div>
         )}
       </div>

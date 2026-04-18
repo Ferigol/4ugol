@@ -149,7 +149,7 @@ export default function Clientes() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="animate-spin text-green-500" size={32} />
+      <Loader2 className="animate-spin text-[#eb5c37]" size={32} />
     </div>
   )
 
@@ -158,15 +158,15 @@ export default function Clientes() {
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clientes</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          <h1 className="text-2xl font-bold text-[#0a0a0a]">Clientes</h1>
+          <p className="text-sm text-[#6b6b6b] mt-0.5">
             {items.length} total · MRR: ${items.reduce((s, c) => s + (c.pack === 'otro' ? (Number(c.custom_price) || 0) : (PACK_PRICES[c.pack] || 0)), 0).toLocaleString()}
           </p>
         </div>
         <button
           id="add-client-btn"
           onClick={() => openAdd()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-semibold shadow-lg shadow-green-500/30 transition-all cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold shadow-lg shadow-[#eb5c37]/25 transition-all cursor-pointer"
         >
           <Plus size={16} />
           Nuevo cliente
@@ -190,8 +190,8 @@ export default function Clientes() {
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{item.name}</p>
-                  {item.club && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.club}</p>}
+                  <p className="text-sm font-semibold text-[#0a0a0a] leading-tight">{item.name}</p>
+                  {item.club && <p className="text-xs text-[#6b6b6b] mt-0.5">{item.club}</p>}
                 </div>
                 <LangBadge lang={item.lang} />
               </div>
@@ -201,14 +201,14 @@ export default function Clientes() {
               </div>
 
               {item.notes && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-2 mb-2 leading-relaxed">
+                <p className="text-xs text-[#b0b0b0] line-clamp-2 mb-2 leading-relaxed">
                   {item.notes}
                 </p>
               )}
 
               <button
                 onClick={() => openNote(item)}
-                className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 hover:text-green-500 font-medium mt-1 cursor-pointer transition-colors"
+                className="flex items-center gap-1.5 text-xs text-[#eb5c37] hover:text-[#d44d2c] font-medium mt-1 cursor-pointer transition-colors"
               >
                 <FileText size={12} />
                 Ver nota de etapa
@@ -227,18 +227,18 @@ export default function Clientes() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Nombre *</label>
               <input
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="Nombre del cliente"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Club / Agencia</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Club / Agencia</label>
               <input
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.club}
                 onChange={e => setForm(f => ({ ...f, club: e.target.value }))}
                 placeholder="Barcelona FC"
@@ -248,20 +248,20 @@ export default function Clientes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Email</label>
               <input
                 type="email"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="cliente@club.com"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Teléfono</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Teléfono</label>
               <input
                 type="tel"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.telefono}
                 onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))}
                 placeholder="+34 600 000 000"
@@ -271,18 +271,18 @@ export default function Clientes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Puesto</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Puesto</label>
               <input
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.puesto}
                 onChange={e => setForm(f => ({ ...f, puesto: e.target.value }))}
                 placeholder="Director deportivo"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del proyecto</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Nombre del proyecto</label>
               <input
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.project_name}
                 onChange={e => setForm(f => ({ ...f, project_name: e.target.value }))}
                 placeholder="Nombre del proyecto"
@@ -292,19 +292,19 @@ export default function Clientes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha inicio</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Fecha inicio</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.start_date}
                 onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha cierre</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Fecha cierre</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                 value={form.end_date}
                 onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))}
               />
@@ -313,9 +313,9 @@ export default function Clientes() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Pack</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Pack</label>
               <select
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 cursor-pointer"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] cursor-pointer"
                 value={form.pack}
                 onChange={e => setForm(f => ({ ...f, pack: e.target.value, custom_price: '' }))}
               >
@@ -327,9 +327,9 @@ export default function Clientes() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Idioma</label>
+              <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Idioma</label>
               <select
-                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 cursor-pointer"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] cursor-pointer"
                 value={form.lang}
                 onChange={e => setForm(f => ({ ...f, lang: e.target.value }))}
               >
@@ -342,13 +342,13 @@ export default function Clientes() {
           {form.pack === 'otro' && (
             <div className="space-y-2">
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-xs font-medium text-[#0a0a0a] mb-1">
                   Precio personalizado ({form.payment_type === 'unico' ? 'pago único' : '$/mes'})
                 </label>
                 <input
                   type="number"
                   min="0"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30"
                   value={form.custom_price}
                   onChange={e => setForm(f => ({ ...f, custom_price: e.target.value }))}
                   placeholder="Ej. 1500"
@@ -362,8 +362,8 @@ export default function Clientes() {
                     onClick={() => setForm(f => ({ ...f, payment_type: val }))}
                     className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                       form.payment_type === val
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        ? 'bg-[#eb5c37] text-white'
+                        : 'bg-[#f5f5f5] text-[#6b6b6b] hover:bg-[#ebebeb]'
                     }`}
                   >
                     {label}
@@ -374,9 +374,9 @@ export default function Clientes() {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
+            <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Estado</label>
             <select
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 cursor-pointer"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] cursor-pointer"
               value={form.status}
               onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
             >
@@ -385,9 +385,9 @@ export default function Clientes() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Notas</label>
+            <label className="block text-xs font-medium text-[#0a0a0a] mb-1">Notas</label>
             <textarea
-              className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 resize-none"
+              className="w-full px-3 py-2 text-sm rounded-lg border border-[#e5e5e5] bg-white text-[#0a0a0a] focus:outline-none focus:border-[#eb5c37] focus:ring-1 focus:ring-[#eb5c37]/30 resize-none"
               rows={3}
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -396,20 +396,20 @@ export default function Clientes() {
           </div>
 
           {saveError && (
-            <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">{saveError}</p>
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{saveError}</p>
           )}
 
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setModalForm(false)}
-              className="flex-1 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl border border-[#e5e5e5] text-sm font-medium text-[#6b6b6b] hover:bg-[#f5f5f5] transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
               disabled={!form.name || saving}
-              className="flex-1 py-2.5 rounded-xl bg-green-500 hover:bg-green-400 text-white text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+              className="flex-1 py-2.5 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
             >
               {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear cliente'}
             </button>
@@ -428,8 +428,8 @@ export default function Clientes() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">{modalNote.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{modalNote.club}</p>
+                <p className="text-sm font-semibold text-[#0a0a0a]">{modalNote.name}</p>
+                <p className="text-xs text-[#6b6b6b]">{modalNote.club}</p>
               </div>
               <div className="flex items-center gap-2">
                 <PackBadge pack={modalNote.pack} price={modalNote.pack === 'otro' ? (Number(modalNote.custom_price) || 0) : PACK_PRICES[modalNote.pack]} />
@@ -445,8 +445,8 @@ export default function Clientes() {
                   onClick={() => setNoteLang(l)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                     noteLang === l
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      ? 'bg-[#eb5c37] text-white'
+                      : 'bg-[#f5f5f5] text-[#6b6b6b] hover:bg-[#ebebeb]'
                   }`}
                 >
                   {l === 'es' ? 'ES 🇪🇸' : 'EN 🇬🇧'}
@@ -455,19 +455,18 @@ export default function Clientes() {
             </div>
 
             {/* Note text */}
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5]">
+              <p className="text-sm text-[#0a0a0a] leading-relaxed">
                 {getNoteText(modalNote, noteLang) || 'Sin nota para esta etapa.'}
               </p>
             </div>
 
-            {/* Copy button */}
             <button
               onClick={handleCopy}
               className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 copied
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                  : 'bg-green-500 hover:bg-green-400 text-white shadow-lg shadow-green-500/30'
+                  ? 'bg-green-100 text-[#4fa052]'
+                  : 'bg-[#eb5c37] hover:bg-[#d44d2c] text-white shadow-lg shadow-[#eb5c37]/25'
               }`}
             >
               {copied ? <Check size={16} /> : <Copy size={16} />}

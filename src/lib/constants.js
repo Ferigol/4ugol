@@ -1,22 +1,22 @@
 // Prospect Kanban columns
 export const PROSPECT_COLUMNS = [
-  { id: 'nuevo',       label: 'Nuevo',       color: 'bg-slate-500' },
-  { id: 'msg1',        label: 'Msg 1',        color: 'bg-blue-500' },
-  { id: 'msg2',        label: 'Msg 2',        color: 'bg-indigo-500' },
-  { id: 'msg3',        label: 'Msg 3',        color: 'bg-violet-500' },
-  { id: 'diagnostico', label: 'Diagnóstico',  color: 'bg-amber-500' },
-  { id: 'propuesta',   label: 'Propuesta',    color: 'bg-orange-500' },
-  { id: 'cerrado',     label: 'Cerrado',      color: 'bg-green-500' },
+  { id: 'nuevo',       label: 'Nuevo',       color: 'bg-slate-400' },
+  { id: 'msg1',        label: 'Msg 1',        color: 'bg-blue-400' },
+  { id: 'msg2',        label: 'Msg 2',        color: 'bg-indigo-400' },
+  { id: 'msg3',        label: 'Msg 3',        color: 'bg-violet-400' },
+  { id: 'diagnostico', label: 'Diagnóstico',  color: 'bg-amber-400' },
+  { id: 'propuesta',   label: 'Propuesta',    color: 'bg-[#eb5c37]' },
+  { id: 'cerrado',     label: 'Cerrado',      color: 'bg-[#4fa052]' },
 ]
 
 // Client Kanban columns
 export const CLIENT_COLUMNS = [
-  { id: 'brief',    label: 'Brief',    color: 'bg-blue-500' },
-  { id: 'boceto',   label: 'Boceto',   color: 'bg-violet-500' },
-  { id: 'vector',   label: 'Vector',   color: 'bg-amber-500' },
-  { id: 'entrega',  label: 'Entrega',  color: 'bg-orange-500' },
-  { id: 'factura',  label: 'Factura',  color: 'bg-pink-500' },
-  { id: 'pagado',   label: 'Pagado',   color: 'bg-green-500' },
+  { id: 'brief',   label: 'Brief',   color: 'bg-blue-400' },
+  { id: 'boceto',  label: 'Boceto',  color: 'bg-violet-400' },
+  { id: 'vector',  label: 'Vector',  color: 'bg-amber-400' },
+  { id: 'entrega', label: 'Entrega', color: 'bg-[#eb5c37]' },
+  { id: 'factura', label: 'Factura', color: 'bg-pink-400' },
+  { id: 'pagado',  label: 'Pagado',  color: 'bg-[#4fa052]' },
 ]
 
 // Pack options with prices
@@ -34,34 +34,30 @@ export const PACK_PRICES = {
   'otro': 0,
 }
 
-// MRR goal
 export const MRR_GOAL = 10000
 
-// Prospect statuses that need follow-up
 export const FOLLOW_UP_STATUSES = ['msg1', 'msg2', 'diagnostico']
 
-// Language options
 export const LANGUAGES = [
   { id: 'es', label: 'ES 🇪🇸' },
   { id: 'en', label: 'EN 🇬🇧' },
 ]
 
-// Status colors for badges
 export const PROSPECT_STATUS_COLORS = {
-  nuevo:       { bg: 'bg-slate-100 dark:bg-slate-800',   text: 'text-slate-600 dark:text-slate-300' },
-  msg1:        { bg: 'bg-blue-100 dark:bg-blue-900/40',   text: 'text-blue-600 dark:text-blue-300' },
-  msg2:        { bg: 'bg-indigo-100 dark:bg-indigo-900/40', text: 'text-indigo-600 dark:text-indigo-300' },
-  msg3:        { bg: 'bg-violet-100 dark:bg-violet-900/40', text: 'text-violet-600 dark:text-violet-300' },
-  diagnostico: { bg: 'bg-amber-100 dark:bg-amber-900/40',  text: 'text-amber-600 dark:text-amber-300' },
-  propuesta:   { bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-600 dark:text-orange-300' },
-  cerrado:     { bg: 'bg-green-100 dark:bg-green-900/40',  text: 'text-green-600 dark:text-green-300' },
+  nuevo:       { bg: 'bg-slate-100',   text: 'text-slate-600' },
+  msg1:        { bg: 'bg-blue-100',    text: 'text-blue-600' },
+  msg2:        { bg: 'bg-indigo-100',  text: 'text-indigo-600' },
+  msg3:        { bg: 'bg-violet-100',  text: 'text-violet-600' },
+  diagnostico: { bg: 'bg-amber-100',   text: 'text-amber-600' },
+  propuesta:   { bg: 'bg-orange-100',  text: 'text-[#eb5c37]' },
+  cerrado:     { bg: 'bg-green-100',   text: 'text-[#4fa052]' },
 }
 
 export const CLIENT_STATUS_COLORS = {
-  brief:   { bg: 'bg-blue-100 dark:bg-blue-900/40',   text: 'text-blue-600 dark:text-blue-300' },
-  boceto:  { bg: 'bg-violet-100 dark:bg-violet-900/40', text: 'text-violet-600 dark:text-violet-300' },
-  vector:  { bg: 'bg-amber-100 dark:bg-amber-900/40',  text: 'text-amber-600 dark:text-amber-300' },
-  entrega: { bg: 'bg-orange-100 dark:bg-orange-900/40', text: 'text-orange-600 dark:text-orange-300' },
-  factura: { bg: 'bg-pink-100 dark:bg-pink-900/40',    text: 'text-pink-600 dark:text-pink-300' },
-  pagado:  { bg: 'bg-green-100 dark:bg-green-900/40',  text: 'text-green-600 dark:text-green-300' },
+  brief:   { bg: 'bg-blue-100',   text: 'text-blue-600' },
+  boceto:  { bg: 'bg-violet-100', text: 'text-violet-600' },
+  vector:  { bg: 'bg-amber-100',  text: 'text-amber-600' },
+  entrega: { bg: 'bg-orange-100', text: 'text-[#eb5c37]' },
+  factura: { bg: 'bg-pink-100',   text: 'text-pink-600' },
+  pagado:  { bg: 'bg-green-100',  text: 'text-[#4fa052]' },
 }

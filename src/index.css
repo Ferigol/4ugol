@@ -3,42 +3,26 @@
 
 @layer base {
   :root {
-    --color-accent: #22c55e;
-    --color-accent-dark: #16a34a;
+    --accent: #eb5c37;
+    --accent-dark: #d44d2c;
+    --green: #4fa052;
+    --sidebar: #0a0a0a;
+    --content-bg: #f5f5f5;
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   html {
     font-family: 'Inter', system-ui, sans-serif;
     scroll-behavior: smooth;
   }
 
-  body {
-    margin: 0;
-    padding: 0;
-  }
+  body { margin: 0; padding: 0; }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 }
 
 @layer utilities {
@@ -48,44 +32,32 @@
     scrollbar-width: thin;
   }
 
-  /* Column inner scroll area */
   .kanban-col-body {
     scrollbar-width: thin;
-    scrollbar-color: #374151 transparent;
+    scrollbar-color: #e5e7eb transparent;
   }
-  .kanban-col-body::-webkit-scrollbar {
-    width: 4px;
-  }
+  .kanban-col-body::-webkit-scrollbar { width: 4px; }
   .kanban-col-body::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: #e5e7eb;
     border-radius: 2px;
   }
 
   .card-hover {
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-
-  .card-hover:hover {
-    transform: translateY(-2px);
-  }
+  .card-hover:hover { transform: translateY(-2px); }
 
   .drag-over {
-    border: 2px dashed #22c55e !important;
-    background: rgba(34, 197, 94, 0.05) !important;
+    border: 2px dashed #eb5c37 !important;
+    background: rgba(235, 92, 55, 0.04) !important;
   }
 
   .dragging {
     opacity: 0.5;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     transform: rotate(2deg);
   }
 
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
-  }
-
-  .glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
+  .backdrop-blur-sm { backdrop-filter: blur(4px); }
+  .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 }
