@@ -22,6 +22,7 @@ export default function Clientes() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(defaultForm)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
   const [noteLang, setNoteLang] = useState('es')
   const [copied, setCopied] = useState(false)
 
@@ -36,11 +37,12 @@ export default function Clientes() {
   const openAdd = (status = 'brief') => {
     setForm({ ...defaultForm, status })
     setEditingId(null)
+    setSaveError(null)
     setModalForm(true)
   }
 
   const openEdit = (item) => {
-    console.log('[openEdit] item from DB:', item)
+    setSaveError(null)
     setForm({
       name:         item.name         ?? '',
       club:         item.club         ?? '',
@@ -60,6 +62,7 @@ export default function Clientes() {
 
   const handleSave = async () => {
     setSaving(true)
+    setSaveError(null)
     const { data: { user } } = await supabase.auth.getUser()
     const payload = {
       user_id:      user.id,
@@ -84,18 +87,20 @@ export default function Clientes() {
         .single()
       if (error) {
         console.error('[handleSave] UPDATE error:', error)
-        console.error('[handleSave] Payload sent:', payload)
-      } else {
-        setItems(prev => prev.map(i => i.id === editingId ? updated : i))
+        setSaveError(error.message)
+        setSaving(false)
+        return
       }
+      setItems(prev => prev.map(i => i.id === editingId ? updated : i))
     } else {
       const { data, error } = await supabase.from('clients').insert(payload).select().single()
       if (error) {
         console.error('[handleSave] INSERT error:', error)
-        console.error('[handleSave] Payload sent:', payload)
-      } else {
-        setItems(prev => [data, ...prev])
+        setSaveError(error.message)
+        setSaving(false)
+        return
       }
+      setItems(prev => [data, ...prev])
     }
     setSaving(false)
     setModalForm(false)
@@ -342,6 +347,10 @@ export default function Clientes() {
               placeholder="Notas del proyecto..."
             />
           </div>
+
+          {saveError && (
+            <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">{saveError}</p>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button
