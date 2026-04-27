@@ -156,7 +156,7 @@ export default function Clientes() {
   )
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a] overflow-hidden">
+    <div className="flex flex-col bg-[#0a0a0a]">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0 gap-4 px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
@@ -215,8 +215,7 @@ export default function Clientes() {
         </div>
       </div>
 
-      {/* Kanban — flex-1 + min-h-0 para que el scroll quede al fondo de la ventana */}
-      <div className="flex-1 min-h-0 px-6 pb-6">
+      <div className="px-6 pb-6">
         <KanbanBoard
           columns={CLIENT_COLUMNS}
           items={filteredItems}
