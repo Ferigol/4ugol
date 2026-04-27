@@ -3,32 +3,30 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 
-export default function KanbanColumn({ id, label, color, items = [], children, onAdd, count }) {
+export default function KanbanColumn({ id, label, color, items = [], children, onAdd }) {
   const { isOver, setNodeRef } = useDroppable({ id })
 
   return (
-    <div className="flex flex-col min-w-[230px] max-w-[230px]">
+    <div className="flex flex-col min-w-[220px] max-w-[220px]">
       {/* Column header */}
-      <div className="flex items-center justify-between mb-3 px-1">
+      <div className="flex items-center justify-between mb-2.5 px-1">
         <div className="flex items-center gap-2">
-          <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
-          <span className="text-xs font-semibold text-[#6b6b6b] uppercase tracking-wider">
+          <div className={`w-2 h-2 rounded-full shrink-0 ${color}`} />
+          <span className="text-xs font-semibold text-[#888] uppercase tracking-wider">
             {label}
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-[#6b6b6b] bg-[#ebebeb] rounded-full px-2 py-0.5">
-            {count ?? items.length}
+          <span className="text-xs font-medium text-[#444] bg-[#1a1a1a] rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+            {items.length}
           </span>
-          {onAdd && (
-            <button
-              onClick={onAdd}
-              className="p-1 rounded-lg text-[#9b9b9b] hover:text-[#eb5c37] hover:bg-[#eb5c37]/10 transition-colors cursor-pointer"
-            >
-              <Plus size={14} />
-            </button>
-          )}
         </div>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="p-1 rounded-md text-[#444] hover:text-[#E8410A] hover:bg-[#E8410A]/10 transition-colors cursor-pointer"
+          >
+            <Plus size={13} />
+          </button>
+        )}
       </div>
 
       {/* Drop zone */}
@@ -36,8 +34,8 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
         ref={setNodeRef}
         className={`flex flex-col gap-2 min-h-[80px] rounded-2xl p-2 transition-all duration-150
           ${isOver
-            ? 'bg-[#eb5c37]/5 border-2 border-dashed border-[#eb5c37]'
-            : 'bg-[#ebebeb]/60 border-2 border-transparent'
+            ? 'bg-[#E8410A]/5 border-2 border-dashed border-[#E8410A]/40'
+            : 'bg-[#0d0d0d] border-2 border-transparent'
           }
         `}
       >
@@ -46,8 +44,8 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
         </SortableContext>
 
         {items.length === 0 && (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-xs text-[#c0c0c0]">Sin tarjetas</p>
+          <div className="flex-1 flex items-center justify-center py-4">
+            <p className="text-[10px] text-[#333]">Sin tarjetas</p>
           </div>
         )}
       </div>

@@ -15,7 +15,7 @@ export default function Badge({ type = 'prospect', value, className = '' }) {
   const isProspect = type === 'prospect'
   const colors = isProspect ? PROSPECT_STATUS_COLORS : CLIENT_STATUS_COLORS
   const labels = isProspect ? PROSPECT_LABELS : CLIENT_LABELS
-  const color = colors[value] || { bg: 'bg-gray-100', text: 'text-gray-600' }
+  const color = colors[value] || { bg: 'bg-[#1a1a1a]', text: 'text-[#888]' }
   const label = labels[value] || value
 
   return (
@@ -28,17 +28,19 @@ export default function Badge({ type = 'prospect', value, className = '' }) {
 export function LangBadge({ lang }) {
   const isES = lang === 'es'
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-      isES ? 'bg-red-100 text-red-600' : 'bg-sky-100 text-sky-600'
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold tracking-wide ${
+      isES
+        ? 'bg-[#2a1a1a] text-[#FF5A1F]'
+        : 'bg-[#1a3a2a] text-[#1D9E75]'
     }`}>
-      {isES ? 'ES 🇪🇸' : 'EN 🇬🇧'}
+      {isES ? 'ES' : 'EN'}
     </span>
   )
 }
 
 export function PackBadge({ pack, price }) {
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-[#4fa052]">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-[#0f2a1f] text-[#1D9E75]">
       <span>{pack}</span>
       <span className="opacity-70">${price}</span>
     </span>

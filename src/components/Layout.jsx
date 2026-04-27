@@ -1,17 +1,16 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Briefcase, LogOut, Menu } from 'lucide-react'
+import { Settings, LogOut, Menu } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 const NAV_LINKS = [
-  { to: '/',           label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/prospectos', label: 'Prospectos', icon: Users },
-  { to: '/clientes',   label: 'Clientes',   icon: Briefcase },
+  { to: '/',           label: 'Dashboard',  dot: 'bg-blue-500' },
+  { to: '/prospectos', label: 'Prospectos', dot: 'bg-amber-500' },
+  { to: '/clientes',   label: 'Clientes',   dot: 'bg-[#1D9E75]' },
 ]
 
 export default function Layout({ children }) {
   const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleLogout = async () => {
@@ -20,81 +19,78 @@ export default function Layout({ children }) {
   }
 
   const Sidebar = ({ mobile = false }) => (
-    <aside
-      className={`
-        ${mobile ? 'fixed inset-y-0 left-0 z-40 w-64' : 'hidden lg:flex flex-col'}
-        ${!mobile && collapsed ? 'w-16' : 'w-64'}
-        bg-[#0a0a0a] flex flex-col transition-all duration-200 shrink-0
-      `}
-    >
+    <aside className={`
+      ${mobile ? 'fixed inset-y-0 left-0 z-40 w-[200px]' : 'hidden lg:flex w-[200px]'}
+      bg-[#111111] flex flex-col shrink-0 border-r border-[#1a1a1a]
+    `}>
       {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/10 ${collapsed && !mobile ? 'justify-center px-0' : ''}`}>
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#eb5c37] shrink-0">
-          <span className="text-white text-lg">⚽</span>
+      <div className="flex items-center gap-2.5 px-5 py-6 border-b border-[#1a1a1a]">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E8410A] shrink-0">
+          <Settings size={16} className="text-white" strokeWidth={2.5} />
         </div>
-        {(!collapsed || mobile) && (
-          <div>
-            <span className="text-lg font-bold text-white tracking-tight">4uGOL</span>
-            <p className="text-[10px] text-white/30 leading-none">CRM</p>
-          </div>
-        )}
+        <div>
+          <span className="text-sm font-black text-white tracking-tight leading-none">4GOL</span>
+          <p className="text-[9px] text-[#444] leading-none mt-0.5">CRM</p>
+        </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-4 space-y-0.5">
-        {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+      <nav className="flex-1 px-3 py-5 space-y-0.5">
+        {NAV_LINKS.map(({ to, label, dot }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
             onClick={() => setMobileOpen(false)}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 cursor-pointer
               ${isActive
-                ? 'bg-[#eb5c37] text-white'
-                : 'text-white/50 hover:text-white hover:bg-white/8'
-              }
-              ${collapsed && !mobile ? 'justify-center' : ''}
-              `
+                ? 'bg-[#1a1a1a] text-white'
+                : 'text-[#555] hover:text-[#888] hover:bg-[#161616]'
+              }`
             }
           >
-            <Icon size={18} className="shrink-0" />
-            {(!collapsed || mobile) && <span>{label}</span>}
+            {({ isActive }) => (
+              <>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-[#E8410A]' : dot} ${isActive ? '' : 'opacity-50'}`} />
+                <span>{label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
 
-      {/* Bottom controls */}
-      <div className={`px-2 py-4 border-t border-white/10 space-y-0.5 ${collapsed && !mobile ? 'px-1' : ''}`}>
-        {!mobile && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={`hidden lg:flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/8 transition-all cursor-pointer ${collapsed ? 'justify-center' : ''}`}
-          >
-            <Menu size={18} />
-            {!collapsed && <span>Colapsar</span>}
-          </button>
-        )}
+      {/* Bottom */}
+      <div className="px-3 py-4 border-t border-[#1a1a1a] space-y-3">
+        {/* Avatar circles */}
+        <div className="flex items-center gap-2 px-2">
+          <div className="w-8 h-8 rounded-full bg-[#E8410A] flex items-center justify-center text-white text-xs font-bold shrink-0">
+            F
+          </div>
+          <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center text-[#444] text-xs font-bold shrink-0">
+            ?
+          </div>
+        </div>
 
         <button
           onClick={handleLogout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white/50 hover:text-red-400 hover:bg-white/8 transition-all cursor-pointer ${collapsed && !mobile ? 'justify-center' : ''}`}
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-sm font-medium text-[#444] hover:text-red-400 hover:bg-[#1a1a1a] transition-all cursor-pointer"
         >
-          <LogOut size={18} />
-          {(!collapsed || mobile) && <span>Cerrar sesión</span>}
+          <LogOut size={15} />
+          <span>Cerrar sesión</span>
         </button>
       </div>
     </aside>
   )
 
   return (
-    <div className="flex h-screen bg-[#f5f5f5] overflow-hidden">
+    <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
       <Sidebar />
 
       {mobileOpen && (
         <div className="lg:hidden">
           <div
-            className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
           <Sidebar mobile />
@@ -103,16 +99,18 @@ export default function Layout({ children }) {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0a0a0a]">
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a]">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 cursor-pointer"
+            className="p-2 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] cursor-pointer"
           >
-            <Menu size={20} />
+            <Menu size={18} />
           </button>
           <div className="flex items-center gap-2">
-            <span className="text-lg">⚽</span>
-            <span className="font-bold text-white">4uGOL</span>
+            <div className="w-6 h-6 rounded-md bg-[#E8410A] flex items-center justify-center">
+              <Settings size={12} className="text-white" />
+            </div>
+            <span className="font-black text-white text-sm">4GOL</span>
           </div>
           <div className="w-9" />
         </div>

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Edit2, Trash2 } from 'lucide-react'
+import { GripVertical, Pencil, X } from 'lucide-react'
 
 export default function KanbanCard({ id, children, onEdit, onDelete }) {
   const {
@@ -16,7 +16,7 @@ export default function KanbanCard({ id, children, onEdit, onDelete }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.35 : 1,
     zIndex: isDragging ? 999 : undefined,
   }
 
@@ -24,40 +24,44 @@ export default function KanbanCard({ id, children, onEdit, onDelete }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group bg-white rounded-2xl border border-[#e5e5e5]
-        shadow-sm hover:shadow-md card-hover cursor-default select-none
-        ${isDragging ? 'shadow-xl rotate-2' : ''}
+      className={`group relative bg-[#111111] rounded-2xl border border-[#222] card-hover cursor-default select-none overflow-hidden
+        ${isDragging ? 'shadow-2xl rotate-1 border-[#E8410A]/40' : ''}
       `}
     >
-      <div className="flex items-center justify-between px-3 pt-2 pb-0 opacity-0 group-hover:opacity-100 transition-opacity h-7">
-        <div className="flex gap-0.5">
+      {/* Top action bar */}
+      <div className="flex items-center justify-between px-3 pt-2.5 pb-0 h-8">
+        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           {onEdit && (
             <button
               onClick={onEdit}
-              className="p-1 rounded text-gray-300 hover:text-[#eb5c37] transition-colors cursor-pointer"
+              className="p-1 rounded-md text-[#444] hover:text-[#E8410A] hover:bg-[#E8410A]/10 transition-colors cursor-pointer"
             >
-              <Edit2 size={13} />
+              <Pencil size={12} />
             </button>
           )}
           {onDelete && (
             <button
               onClick={onDelete}
-              className="p-1 rounded text-gray-300 hover:text-red-500 transition-colors cursor-pointer"
+              className="p-1 rounded-md text-[#444] hover:text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
             >
-              <Trash2 size={13} />
+              <X size={12} />
             </button>
           )}
         </div>
         <div
           {...attributes}
           {...listeners}
-          className="p-1 rounded text-gray-200 hover:text-gray-400 cursor-grab active:cursor-grabbing"
+          className="p-1 rounded-md text-[#333] hover:text-[#555] cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <GripVertical size={14} />
+          <GripVertical size={13} />
         </div>
       </div>
 
-      <div className="px-3 pb-3 pt-1">{children}</div>
+      {/* Content */}
+      <div className="px-3 pb-2 pt-1">{children}</div>
+
+      {/* Orange accent line at bottom */}
+      <div className="h-[2px] bg-gradient-to-r from-[#E8410A] to-[#FF5A1F] opacity-60" />
     </div>
   )
 }

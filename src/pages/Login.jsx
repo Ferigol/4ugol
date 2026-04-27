@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -23,28 +24,27 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] p-4">
+      {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(235,92,55,0.08), transparent)' }} />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(circle, rgba(79,160,82,0.06), transparent)' }} />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(232,65,10,0.06) 0%, transparent 70%)' }} />
       </div>
 
-      <div className="relative w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#eb5c37] shadow-lg mb-4">
-              <span className="text-3xl">⚽</span>
-            </div>
-            <h1 className="text-3xl font-black text-[#0a0a0a] tracking-tight">4uGOL</h1>
-            <p className="text-[#6b6b6b] text-sm mt-1">Football Artist CRM</p>
+      <div className="relative w-full max-w-sm">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[#E8410A] mb-4 shadow-lg shadow-[#E8410A]/20">
+            <Settings size={26} className="text-white" strokeWidth={2.5} />
           </div>
+          <h1 className="text-4xl font-black text-white tracking-tight">4GOL</h1>
+          <p className="text-[#555] text-sm mt-1">Football Artist CRM</p>
+        </div>
 
-          {/* Form */}
+        {/* Card */}
+        <div className="bg-[#111111] rounded-2xl border border-[#222] p-7 shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#0a0a0a] mb-1.5">Email</label>
+              <label className="block text-xs font-medium text-[#888] mb-1.5">Email</label>
               <input
                 id="email"
                 type="email"
@@ -52,12 +52,12 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@email.com"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] text-[#0a0a0a] placeholder-[#b0b0b0] focus:outline-none focus:border-[#eb5c37] focus:ring-2 focus:ring-[#eb5c37]/20 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-[#444] focus:outline-none focus:border-[#E8410A] focus:ring-1 focus:ring-[#E8410A]/20 transition-all text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-[#0a0a0a] mb-1.5">Contraseña</label>
+              <label className="block text-xs font-medium text-[#888] mb-1.5">Contraseña</label>
               <input
                 id="password"
                 type="password"
@@ -65,12 +65,12 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-3 rounded-xl bg-[#f5f5f5] border border-[#e5e5e5] text-[#0a0a0a] placeholder-[#b0b0b0] focus:outline-none focus:border-[#eb5c37] focus:ring-2 focus:ring-[#eb5c37]/20 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-white placeholder-[#444] focus:outline-none focus:border-[#E8410A] focus:ring-1 focus:ring-[#E8410A]/20 transition-all text-sm"
               />
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+              <div className="px-4 py-3 rounded-xl bg-red-950/50 border border-red-800/50 text-red-400 text-sm">
                 {error}
               </div>
             )}
@@ -79,7 +79,7 @@ export default function Login() {
               id="login-btn"
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-[#eb5c37] hover:bg-[#d44d2c] text-white shadow-lg transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer mt-2"
+              className="w-full py-3 px-6 rounded-xl font-semibold text-sm bg-[#E8410A] hover:bg-[#c93500] text-white shadow-lg shadow-[#E8410A]/20 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer mt-1"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -93,7 +93,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-[#b0b0b0] mt-6">
+          <p className="text-center text-xs text-[#333] mt-5">
             Las cuentas son creadas por el administrador
           </p>
         </div>
