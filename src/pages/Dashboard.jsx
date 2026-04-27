@@ -116,20 +116,20 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col bg-[#0a0a0a]">
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-8 pt-7 pb-0 shrink-0">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#111] border border-[#222] text-[#555] w-64">
-          <Search size={14} />
-          <span className="text-xs">Buscar...</span>
-        </div>
-        <span className="text-xs text-[#444] font-medium capitalize">{dateStr}</span>
-      </div>
-
       <div className="px-8 py-7 space-y-5 max-w-5xl w-full mx-auto">
-        {/* Greeting */}
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Hola Fer 👋</h1>
-          <p className="text-[#444] text-sm mt-1">Aquí está el resumen de hoy</p>
+        {/* Greeting + search */}
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tight">Hola Fer 👋</h1>
+            <p className="text-[#444] text-sm mt-1">Aquí está el resumen de hoy</p>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#111] border border-[#222] text-[#555] w-56">
+              <Search size={14} />
+              <span className="text-xs">Buscar...</span>
+            </div>
+            <span className="text-xs text-[#444] font-medium capitalize hidden lg:block">{dateStr}</span>
+          </div>
         </div>
 
         {/* Metric cards */}
