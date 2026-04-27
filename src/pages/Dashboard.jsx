@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PACK_PRICES, FOLLOW_UP_STATUSES, MRR_GOAL } from '../lib/constants'
 import { Bell, ArrowRight, Loader2, Search } from 'lucide-react'
+import Logo from '../components/Logo'
 
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DAY_NAMES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
@@ -120,6 +121,7 @@ export default function Dashboard() {
         {/* Greeting + search */}
         <div className="flex items-center justify-between gap-4">
           <div>
+            <Logo width={120} height={33} className="text-white mb-1" />
             <h1 className="text-3xl text-white tracking-tight font-gilroy">Hola Fer</h1>
             <p className="text-[#444] text-sm mt-1">Aquí está el resumen de hoy</p>
           </div>

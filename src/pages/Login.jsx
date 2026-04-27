@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Settings } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import Logo from '../components/Logo'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -33,11 +33,8 @@ export default function Login() {
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-[#E8410A] mb-4 shadow-lg shadow-[#E8410A]/20">
-            <Settings size={26} className="text-white" strokeWidth={2.5} />
-          </div>
-          <h1 className="text-4xl font-black text-white tracking-tight">4GOL</h1>
-          <p className="text-[#555] text-sm mt-1">Football Artist CRM</p>
+          <Logo width={160} height={44} className="text-white mb-3" />
+          <p className="text-[#555] text-sm">Football Artist CRM</p>
         </div>
 
         {/* Card */}
