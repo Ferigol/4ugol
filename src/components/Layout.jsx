@@ -97,7 +97,7 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a]">
           <button
@@ -115,7 +115,7 @@ export default function Layout({ children }) {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 min-h-0 overflow-hidden">
           {children}
         </main>
       </div>
