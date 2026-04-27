@@ -26,7 +26,7 @@ export default function Layout({ children }) {
     `}>
       {/* Logo */}
       <div className="flex items-center px-5 py-5 border-b border-[#1a1a1a]">
-        <Logo width={100} height={28} className="text-white" />
+        <Logo width={80} height={22} className="text-white ml-5" />
       </div>
 
       {/* Nav */}
