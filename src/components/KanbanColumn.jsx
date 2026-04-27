@@ -7,7 +7,7 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
   const { isOver, setNodeRef } = useDroppable({ id })
 
   return (
-    <div className="flex flex-col min-w-[220px] max-w-[220px]">
+    <div className="flex flex-col min-w-[220px] max-w-[220px] h-full">
       {/* Column header */}
       <div className="flex items-center justify-between mb-2.5 px-1">
         <div className="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function KanbanColumn({ id, label, color, items = [], children, o
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex flex-col gap-2 min-h-[80px] rounded-2xl p-2 transition-all duration-150
+        className={`flex flex-col gap-2 flex-1 min-h-0 rounded-2xl p-2 overflow-y-auto transition-all duration-150 kanban-col-body
           ${isOver
             ? 'bg-[#E8410A]/5 border-2 border-dashed border-[#E8410A]/40'
             : 'bg-[#0d0d0d] border-2 border-transparent'

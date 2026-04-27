@@ -156,9 +156,9 @@ export default function Clientes() {
   )
 
   return (
-    <div className="flex flex-col p-6 gap-4 bg-[#0a0a0a] min-h-full">
+    <div className="flex flex-col h-full bg-[#0a0a0a]">
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0 gap-4">
+      <div className="flex items-center justify-between shrink-0 gap-4 px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
@@ -215,8 +215,8 @@ export default function Clientes() {
         </div>
       </div>
 
-      {/* Kanban */}
-      <div className="w-full">
+      {/* Kanban — flex-1 + min-h-0 para que el scroll quede al fondo de la ventana */}
+      <div className="flex-1 min-h-0 px-6 pb-6">
         <KanbanBoard
           columns={CLIENT_COLUMNS}
           items={filteredItems}
