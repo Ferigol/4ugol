@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Settings, LogOut, Menu } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
+import Logo from './Logo'
 import { supabase } from '../lib/supabase'
 
 const NAV_LINKS = [
@@ -24,14 +25,8 @@ export default function Layout({ children }) {
       bg-[#111111] flex flex-col shrink-0 border-r border-[#1a1a1a]
     `}>
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-6 border-b border-[#1a1a1a]">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#E8410A] shrink-0">
-          <Settings size={16} className="text-white" strokeWidth={2.5} />
-        </div>
-        <div>
-          <span className="text-sm font-black text-white tracking-tight leading-none">4GOL</span>
-          <p className="text-[9px] text-[#444] leading-none mt-0.5">CRM</p>
-        </div>
+      <div className="flex items-center px-5 py-5 border-b border-[#1a1a1a]">
+        <Logo width={100} height={28} className="text-white" />
       </div>
 
       {/* Nav */}
@@ -106,12 +101,7 @@ export default function Layout({ children }) {
           >
             <Menu size={18} />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#E8410A] flex items-center justify-center">
-              <Settings size={12} className="text-white" />
-            </div>
-            <span className="font-black text-white text-sm">4GOL</span>
-          </div>
+          <Logo width={72} height={20} className="text-white" />
           <div className="w-9" />
         </div>
 
