@@ -154,9 +154,9 @@ export default function Prospectos() {
   )
 
   return (
-    <div className="flex flex-col bg-[#0a0a0a]">
+    <div className="flex flex-col p-6 gap-4 bg-[#0a0a0a] min-h-full">
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0 gap-4 px-6 pt-6 pb-4">
+      <div className="flex items-center justify-between shrink-0 gap-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
@@ -213,7 +213,7 @@ export default function Prospectos() {
         </div>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="w-full">
         <KanbanBoard
           columns={PROSPECT_COLUMNS}
           items={filteredItems}
