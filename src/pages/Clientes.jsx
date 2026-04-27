@@ -6,7 +6,8 @@ import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge, PackBadge } from '../components/Badge'
-import { Plus, FileText, Copy, Check, Loader2 } from 'lucide-react'
+import { Plus, FileText, Copy, Check, Loader2, Download } from 'lucide-react'
+import { downloadClientFichas } from '../lib/downloadFichas'
 
 const defaultForm = {
   name: '', club: '', email: '', telefono: '', puesto: '', project_name: '',
@@ -163,14 +164,24 @@ export default function Clientes() {
             {items.length} total · MRR: ${items.reduce((s, c) => s + (c.pack === 'otro' ? (Number(c.custom_price) || 0) : (PACK_PRICES[c.pack] || 0)), 0).toLocaleString()}
           </p>
         </div>
-        <button
-          id="add-client-btn"
-          onClick={() => openAdd()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold shadow-lg shadow-[#eb5c37]/25 transition-all cursor-pointer"
-        >
-          <Plus size={16} />
-          Nuevo cliente
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadClientFichas(items)}
+            title="Descargar Excel"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#e5e5e5] bg-white hover:bg-[#f5f5f5] text-[#0a0a0a] text-sm font-semibold transition-all cursor-pointer"
+          >
+            <Download size={16} />
+            Descargar fichas
+          </button>
+          <button
+            id="add-client-btn"
+            onClick={() => openAdd()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold shadow-lg shadow-[#eb5c37]/25 transition-all cursor-pointer"
+          >
+            <Plus size={16} />
+            Nuevo cliente
+          </button>
+        </div>
       </div>
 
       {/* Kanban */}

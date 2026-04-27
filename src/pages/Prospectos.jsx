@@ -6,7 +6,8 @@ import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge } from '../components/Badge'
-import { Plus, MessageSquare, Copy, Check, Loader2 } from 'lucide-react'
+import { Plus, MessageSquare, Copy, Check, Loader2, Download } from 'lucide-react'
+import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'date_msg1', msg2: 'date_msg2', msg3: 'date_msg3' }
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
@@ -140,14 +141,24 @@ export default function Prospectos() {
           <h1 className="text-2xl font-bold text-[#0a0a0a]">Prospectos</h1>
           <p className="text-sm text-[#6b6b6b] mt-0.5">{items.length} total</p>
         </div>
-        <button
-          id="add-prospect-btn"
-          onClick={() => openAdd()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold shadow-lg shadow-[#eb5c37]/25 transition-all cursor-pointer"
-        >
-          <Plus size={16} />
-          Nuevo prospecto
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadProspectFichas(items)}
+            title="Descargar Excel"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#e5e5e5] bg-white hover:bg-[#f5f5f5] text-[#0a0a0a] text-sm font-semibold transition-all cursor-pointer"
+          >
+            <Download size={16} />
+            Descargar fichas
+          </button>
+          <button
+            id="add-prospect-btn"
+            onClick={() => openAdd()}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eb5c37] hover:bg-[#d44d2c] text-white text-sm font-semibold shadow-lg shadow-[#eb5c37]/25 transition-all cursor-pointer"
+          >
+            <Plus size={16} />
+            Nuevo prospecto
+          </button>
+        </div>
       </div>
 
       <div className="w-full">
