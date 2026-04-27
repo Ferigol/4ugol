@@ -176,7 +176,7 @@ export default function Clientes() {
 
         <div className="flex items-center gap-2">
           {searchOpen ? (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#111] border border-[#E8410A] w-56 transition-all">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#111] border border-white/30 w-56 transition-all">
               <Search size={14} className="text-[#555] shrink-0" />
               <input
                 ref={searchRef}
