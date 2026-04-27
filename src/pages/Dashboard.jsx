@@ -115,7 +115,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a] overflow-y-auto overflow-x-hidden">
+    <div className="flex flex-col bg-[#0a0a0a] overflow-x-hidden">
       {/* Top bar */}
       <div className="flex items-center justify-between px-8 pt-7 pb-0 shrink-0">
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#111] border border-[#222] text-[#555] w-64">

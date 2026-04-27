@@ -115,7 +115,7 @@ export default function Layout({ children }) {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 overflow-auto">
           {children}
         </main>
       </div>

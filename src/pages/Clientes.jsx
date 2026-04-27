@@ -156,7 +156,7 @@ export default function Clientes() {
   )
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a]">
+    <div className="flex flex-col h-full bg-[#0a0a0a] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0 gap-4 px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
