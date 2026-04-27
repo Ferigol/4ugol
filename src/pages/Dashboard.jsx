@@ -128,7 +128,7 @@ export default function Dashboard() {
               <Search size={14} />
               <span className="text-xs">Buscar...</span>
             </div>
-            <span className="text-xs text-[#444] font-medium capitalize hidden lg:block">{dateStr}</span>
+            <span className="text-xs text-white font-medium capitalize hidden lg:block">{dateStr}</span>
           </div>
         </div>
 
