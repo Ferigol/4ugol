@@ -120,7 +120,7 @@ export default function Dashboard() {
         {/* Greeting + search */}
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Hola Fer 👋</h1>
+            <h1 className="text-3xl text-white tracking-tight font-gilroy">Hola Fer 👋</h1>
             <p className="text-[#444] text-sm mt-1">Aquí está el resumen de hoy</p>
           </div>
           <div className="flex items-center gap-3 shrink-0">

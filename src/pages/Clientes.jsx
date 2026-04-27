@@ -167,7 +167,7 @@ export default function Clientes() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight">Clientes</h1>
+            <h1 className="text-xl text-white tracking-tight font-gilroy">Clientes</h1>
             <p className="text-xs text-[#444] mt-0.5">
               {searchQuery.trim() ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? 's' : ''}` : `${items.length} total · MRR: $${mrr.toLocaleString()}`}
             </p>

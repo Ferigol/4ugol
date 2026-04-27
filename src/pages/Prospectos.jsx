@@ -165,7 +165,7 @@ export default function Prospectos() {
             <ArrowLeft size={16} />
           </button>
           <div>
-            <h1 className="text-xl font-black text-white tracking-tight">Prospectos</h1>
+            <h1 className="text-xl text-white tracking-tight font-gilroy">Prospectos</h1>
             <p className="text-xs text-[#444] mt-0.5">
             {searchQuery.trim() ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? 's' : ''}` : `${items.length} total`}
           </p>
