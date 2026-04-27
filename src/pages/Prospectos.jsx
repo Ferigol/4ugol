@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PROSPECT_COLUMNS } from '../lib/constants'
@@ -7,7 +7,7 @@ import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge } from '../components/Badge'
-import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search } from 'lucide-react'
+import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X } from 'lucide-react'
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'date_msg1', msg2: 'date_msg2', msg3: 'date_msg3' }
@@ -37,6 +37,23 @@ export default function Prospectos() {
   const [saveError, setSaveError] = useState('')
   const [msgLang, setMsgLang] = useState('es')
   const [copied, setCopied] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchRef = useRef(null)
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus()
+  }, [searchOpen])
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') { setSearchOpen(false); setSearchQuery('') } }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  const filteredItems = searchQuery.trim()
+    ? items.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : items
 
   const fetchData = useCallback(async () => {
     const { data } = await supabase.from('prospects').select('*').order('created_at', { ascending: false })
@@ -149,14 +166,35 @@ export default function Prospectos() {
           </button>
           <div>
             <h1 className="text-xl font-black text-white tracking-tight">Prospectos</h1>
-            <p className="text-xs text-[#444] mt-0.5">{items.length} total</p>
+            <p className="text-xs text-[#444] mt-0.5">
+            {searchQuery.trim() ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? 's' : ''}` : `${items.length} total`}
+          </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 rounded-xl bg-[#111] border border-[#222] text-[#555] hover:text-white hover:border-[#333] transition-all cursor-pointer">
-            <Search size={16} />
-          </button>
+          {searchOpen ? (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#111] border border-[#E8410A] w-56 transition-all">
+              <Search size={14} className="text-[#555] shrink-0" />
+              <input
+                ref={searchRef}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar prospecto..."
+                className="flex-1 bg-transparent text-sm text-white placeholder-[#444] focus:outline-none min-w-0"
+              />
+              <button onClick={() => { setSearchOpen(false); setSearchQuery('') }} className="text-[#555] hover:text-white cursor-pointer shrink-0">
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 rounded-xl bg-[#111] border border-[#222] text-[#555] hover:text-white hover:border-[#333] transition-all cursor-pointer"
+            >
+              <Search size={16} />
+            </button>
+          )}
           <button
             onClick={() => downloadProspectFichas(items)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#333] bg-transparent text-[#888] hover:text-white hover:border-[#555] text-sm font-medium transition-all cursor-pointer"
@@ -179,7 +217,7 @@ export default function Prospectos() {
       <div className="w-full">
         <KanbanBoard
           columns={PROSPECT_COLUMNS}
-          items={items}
+          items={filteredItems}
           onItemsChange={handleItemsChange}
           onStatusChange={handleStatusChange}
           onAddToColumn={openAdd}
