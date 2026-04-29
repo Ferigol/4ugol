@@ -13,7 +13,6 @@ import { downloadProspectFichas } from '../lib/downloadFichas'
 const MSG_DATE_FIELDS = { msg1: 'date_msg1', msg2: 'date_msg2', msg3: 'date_msg3' }
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const formatMsgDate = (ts) => { if (!ts) return null; const d = new Date(ts); return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]} ${d.getFullYear()}` }
-const STATUS_ORDER = ['nuevo','msg1','msg2','msg3','diagnostico','propuesta','cerrado']
 const tsToDateInput = (ts) => ts ? new Date(ts).toISOString().split('T')[0] : ''
 const dateInputToTs = (d) => d ? new Date(d + 'T12:00:00Z').toISOString() : null
 
@@ -23,7 +22,15 @@ const LBL = 'block text-xs font-medium text-[#666] mb-1.5'
 
 const defaultForm = {
   name: '', club: '', email: '', phone: '', role: '', lang: 'es', status: 'nuevo', notes: '',
+  msg1: '', msg2: '', msg3: '',
 }
+
+const SectionHeader = ({ label }) => (
+  <div className="flex items-center gap-3 pt-3">
+    <span className="text-[10px] font-semibold text-[#E8410A] uppercase tracking-widest whitespace-nowrap">{label}</span>
+    <div className="flex-1 h-px bg-[#222]" />
+  </div>
+)
 
 export default function Prospectos() {
   const navigate = useNavigate()
@@ -75,6 +82,7 @@ export default function Prospectos() {
       name: item.name, club: item.club || '', email: item.email || '',
       phone: item.phone || '', role: item.role || '',
       lang: item.lang || 'es', status: item.status, notes: item.notes || '',
+      msg1: item.msg1 || '', msg2: item.msg2 || '', msg3: item.msg3 || '',
       date_msg1: tsToDateInput(item.date_msg1),
       date_msg2: tsToDateInput(item.date_msg2),
       date_msg3: tsToDateInput(item.date_msg3),
@@ -263,6 +271,10 @@ export default function Prospectos() {
       {/* Add/Edit Modal */}
       <Modal isOpen={modalForm} onClose={() => setModalForm(false)} title={editingId ? 'Editar prospecto' : 'Nuevo prospecto'}>
         <div className="space-y-4">
+
+          {/* ── Sección 1: Datos del prospecto ── */}
+          <SectionHeader label="Datos del prospecto" />
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={LBL}>Nombre *</label>
@@ -271,17 +283,6 @@ export default function Prospectos() {
             <div>
               <label className={LBL}>Club / Agencia</label>
               <input className={INP} value={form.club} onChange={e => setForm(f => ({ ...f, club: e.target.value }))} placeholder="Real Madrid" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={LBL}>Email</label>
-              <input type="email" className={INP} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="contacto@club.com" />
-            </div>
-            <div>
-              <label className={LBL}>Teléfono</label>
-              <input type="tel" className={INP} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+34 600 000 000" />
             </div>
           </div>
 
@@ -299,6 +300,20 @@ export default function Prospectos() {
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LBL}>Email</label>
+              <input type="email" className={INP} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="contacto@club.com" />
+            </div>
+            <div>
+              <label className={LBL}>Teléfono</label>
+              <input type="tel" className={INP} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+34 600 000 000" />
+            </div>
+          </div>
+
+          {/* ── Sección 2: Seguimiento LinkedIn ── */}
+          <SectionHeader label="Seguimiento LinkedIn" />
+
           <div>
             <label className={LBL}>Estado</label>
             <select className={SEL} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
@@ -306,27 +321,46 @@ export default function Prospectos() {
             </select>
           </div>
 
-          {editingId && (() => {
-            const idx = STATUS_ORDER.indexOf(form.status)
-            const showMsg1 = idx >= STATUS_ORDER.indexOf('msg1') || !!form.date_msg1
-            const showMsg2 = idx >= STATUS_ORDER.indexOf('msg2') || !!form.date_msg2
-            const showMsg3 = idx >= STATUS_ORDER.indexOf('msg3') || !!form.date_msg3
-            if (!showMsg1 && !showMsg2 && !showMsg3) return null
-            return (
+          {[
+            { key: 'msg1', dateKey: 'date_msg1', label: 'Mensaje 1' },
+            { key: 'msg2', dateKey: 'date_msg2', label: 'Mensaje 2' },
+            { key: 'msg3', dateKey: 'date_msg3', label: 'Mensaje 3' },
+          ].map(({ key, dateKey, label }) => (
+            <div key={key} className="rounded-xl border border-[#222] bg-[#111] p-3 space-y-2">
+              <p className="text-[10px] font-semibold text-[#555] uppercase tracking-wider">{label}</p>
               <div>
-                <p className="text-xs font-medium text-[#555] mb-1.5">Fechas de contacto</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {showMsg1 && <div><label className="block text-[10px] font-medium text-[#555] mb-1">Fecha Msg 1</label><input type="date" className="w-full px-2 py-2 text-xs rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer" value={form.date_msg1 || ''} onChange={e => setForm(f => ({ ...f, date_msg1: e.target.value }))} /></div>}
-                  {showMsg2 && <div><label className="block text-[10px] font-medium text-[#555] mb-1">Fecha Msg 2</label><input type="date" className="w-full px-2 py-2 text-xs rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer" value={form.date_msg2 || ''} onChange={e => setForm(f => ({ ...f, date_msg2: e.target.value }))} /></div>}
-                  {showMsg3 && <div><label className="block text-[10px] font-medium text-[#555] mb-1">Fecha Msg 3</label><input type="date" className="w-full px-2 py-2 text-xs rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer" value={form.date_msg3 || ''} onChange={e => setForm(f => ({ ...f, date_msg3: e.target.value }))} /></div>}
-                </div>
+                <label className={LBL}>Texto del mensaje</label>
+                <textarea
+                  className={`${INP} resize-none`}
+                  rows={3}
+                  value={form[key]}
+                  onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                  placeholder={`Escribe aquí el ${label.toLowerCase()}...`}
+                />
               </div>
-            )
-          })()}
+              <div>
+                <label className={LBL}>Fecha de envío</label>
+                <input
+                  type="date"
+                  className={INP}
+                  value={form[dateKey] || ''}
+                  onChange={e => setForm(f => ({ ...f, [dateKey]: e.target.value }))}
+                />
+              </div>
+            </div>
+          ))}
+
+          {/* ── Sección 3: Notas generales ── */}
+          <SectionHeader label="Notas generales" />
 
           <div>
-            <label className={LBL}>Notas</label>
-            <textarea className={`${INP} resize-none`} rows={3} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Notas adicionales..." />
+            <textarea
+              className={`${INP} resize-none`}
+              rows={4}
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="Links, observaciones, contexto extra..."
+            />
           </div>
 
           {saveError && (
