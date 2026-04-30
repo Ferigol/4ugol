@@ -2,12 +2,28 @@ import { useEffect, useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PACK_PRICES, FOLLOW_UP_STATUSES, MRR_GOAL } from '../lib/constants'
-import { Bell, ArrowRight, Loader2, Search } from 'lucide-react'
+import { Bell, ArrowRight, Loader2 } from 'lucide-react'
 
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DAY_NAMES  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 const STATUS_LABELS = { msg1: 'Msg 1', msg2: 'Msg 2', diagnostico: 'Diagnóstico' }
+
+const daysSince = (dateStr) => {
+  if (!dateStr) return null
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+}
+
+const getLastContactDate = (prospect) => {
+  const map = {
+    msg1:        prospect.msg1_fecha,
+    msg2:        prospect.msg2_fecha,
+    msg3:        prospect.msg3_fecha,
+    diagnostico: prospect.msg3_fecha || prospect.msg2_fecha || prospect.msg1_fecha,
+    propuesta:   prospect.msg3_fecha || prospect.msg2_fecha || prospect.msg1_fecha,
+  }
+  return map[prospect.status] || null
+}
 
 // SVG line chart — generates a smooth path from data points
 function MiniLineChart({ values, width = 280, height = 90 }) {
@@ -70,9 +86,17 @@ export default function Dashboard() {
 
   const activeProspects = prospects.filter(p => p.status !== 'cerrado').length
   const activeClients   = clients.filter(c => c.status !== 'pagado').length
-  const mrr = clients.reduce((sum, c) =>
-    sum + (c.pack === 'otro' ? (Number(c.custom_price) || 0) : (PACK_PRICES[c.pack] || 0)), 0)
-  const pendingFollowUps = prospects.filter(p => FOLLOW_UP_STATUSES.includes(p.status))
+  const mrr = clients
+    .filter(c => c.status !== 'pagado')
+    .reduce((sum, c) =>
+      sum + (c.pack === 'otro' ? (Number(c.custom_price) || 0) : (PACK_PRICES[c.pack] || 0)), 0)
+  const pendingFollowUps = prospects
+    .filter(p => FOLLOW_UP_STATUSES.includes(p.status))
+    .sort((a, b) => {
+      const da = daysSince(getLastContactDate(a)) ?? -1
+      const db = daysSince(getLastContactDate(b)) ?? -1
+      return db - da
+    })
   const mrrProgress  = Math.min((mrr / MRR_GOAL) * 100, 100)
   const remaining    = Math.max(MRR_GOAL - mrr, 0)
   const clientsNeeded = remaining > 0 ? Math.ceil(remaining / PACK_PRICES['4-3-3']) : 0
@@ -123,13 +147,7 @@ export default function Dashboard() {
             <h1 className="text-3xl text-white tracking-tight font-gilroy">Hola Fer</h1>
             <p className="text-[#444] text-sm mt-1">Aquí está el resumen de hoy</p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#111] border border-[#222] text-[#555] w-56">
-              <Search size={14} />
-              <span className="text-xs">Buscar...</span>
-            </div>
-            <span className="text-xs text-white font-medium capitalize hidden lg:block">{dateStr}</span>
-          </div>
+          <span className="text-xs text-white font-medium capitalize hidden lg:block">{dateStr}</span>
         </div>
 
         {/* Metric cards */}
@@ -211,25 +229,44 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-1">
-                {pendingFollowUps.slice(0, 7).map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between py-2 px-2 rounded-xl hover:bg-[#1a1a1a] transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-[#E8410A]/10 border border-[#E8410A]/20 flex items-center justify-center text-[#E8410A] text-xs font-bold shrink-0">
-                        {p.name?.[0]?.toUpperCase() || '?'}
+                {pendingFollowUps.slice(0, 7).map((p) => {
+                  const days = daysSince(getLastContactDate(p))
+                  const isUrgent   = days !== null && days > 7
+                  const isCritical = days !== null && days > 14
+                  return (
+                    <Link
+                      key={p.id}
+                      to={`/prospectos?id=${p.id}`}
+                      className="flex items-center justify-between py-2 px-2 rounded-xl hover:bg-[#1a1a1a] transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#E8410A]/10 border border-[#E8410A]/20 flex items-center justify-center text-[#E8410A] text-xs font-bold shrink-0">
+                          {p.name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-white truncate">{p.name}</p>
+                          <p className="text-[10px] text-[#444] truncate">{p.club || '—'}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-white truncate">{p.name}</p>
-                        <p className="text-[10px] text-[#444] truncate">{p.club || '—'}</p>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {days !== null && (
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                            isCritical
+                              ? 'bg-red-950 text-red-400'
+                              : isUrgent
+                                ? 'bg-amber-950 text-amber-400'
+                                : 'bg-[#1a1a1a] text-[#555]'
+                          }`}>
+                            {days}d
+                          </span>
+                        )}
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-950 text-amber-400">
+                          {STATUS_LABELS[p.status] || p.status}
+                        </span>
                       </div>
-                    </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 shrink-0 ml-2">
-                      {STATUS_LABELS[p.status] || p.status}
-                    </span>
-                  </div>
-                ))}
+                    </Link>
+                  )
+                })}
                 {pendingFollowUps.length > 7 && (
                   <p className="text-center text-[10px] text-[#444] pt-2">
                     +{pendingFollowUps.length - 7} más

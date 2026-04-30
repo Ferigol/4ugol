@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PROSPECT_COLUMNS } from '../lib/constants'
 import { messages } from '../lib/messages'
@@ -14,6 +14,22 @@ const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fe
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const formatMsgDate = (d) => { if (!d) return null; const [y, m, day] = d.split('-'); return `${parseInt(day)} ${MONTH_ABBR[parseInt(m) - 1]} ${y}` }
 const todayDate = () => new Date().toISOString().split('T')[0]
+
+const daysSince = (dateStr) => {
+  if (!dateStr) return null
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+}
+
+const getLastContactDate = (item) => {
+  const map = {
+    msg1:        item.msg1_fecha,
+    msg2:        item.msg2_fecha,
+    msg3:        item.msg3_fecha,
+    diagnostico: item.msg3_fecha || item.msg2_fecha || item.msg1_fecha,
+    propuesta:   item.msg3_fecha || item.msg2_fecha || item.msg1_fecha,
+  }
+  return map[item.status] || null
+}
 
 const INP = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] text-white placeholder-[#444] focus:outline-none focus:border-[#E8410A] focus:ring-1 focus:ring-[#E8410A]/20 transition-all'
 const SEL = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer transition-all'
@@ -47,6 +63,18 @@ export default function Prospectos() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    const targetId = searchParams.get('id')
+    if (!targetId || items.length === 0) return
+    const target = items.find(i => String(i.id) === targetId)
+    if (target) {
+      openEdit(target)
+      setSearchParams({}, { replace: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, searchParams])
 
   useEffect(() => {
     if (searchOpen) searchRef.current?.focus()
@@ -252,11 +280,30 @@ export default function Prospectos() {
               onDelete={() => handleDelete(item.id)}
             >
               <div className="mb-2">
-                <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                <div className="flex items-center justify-between gap-1.5 flex-wrap mb-0.5">
                   <LangBadge lang={item.lang} />
+                  {(() => {
+                    const days = daysSince(getLastContactDate(item))
+                    if (days === null || days <= 7) return null
+                    const isCritical = days > 14
+                    return (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                        isCritical ? 'bg-red-950 text-red-400' : 'bg-amber-950 text-amber-400'
+                      }`}>
+                        {days}d sin contacto
+                      </span>
+                    )
+                  })()}
                 </div>
                 <p className="text-sm font-bold text-white leading-tight mt-1">{item.name}</p>
                 {item.club && <p className="text-xs text-[#555] mt-0.5">{item.club}</p>}
+                {(() => {
+                  const days = daysSince(getLastContactDate(item))
+                  if (days === null || days > 7) return null
+                  return (
+                    <p className="text-[10px] text-[#444] mt-0.5">hace {days} día{days !== 1 ? 's' : ''}</p>
+                  )
+                })()}
                 {(item.msg1_fecha || item.msg2_fecha || item.msg3_fecha) && (
                   <div className="flex flex-col gap-0.5 mt-1.5">
                     {item.msg1_fecha && <span className="text-[10px] text-[#444]">MSJ 1: {formatMsgDate(item.msg1_fecha)}</span>}

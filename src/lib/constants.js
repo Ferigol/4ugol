@@ -36,7 +36,7 @@ export const PACK_PRICES = {
 
 export const MRR_GOAL = 10000
 
-export const FOLLOW_UP_STATUSES = ['msg1', 'msg2', 'diagnostico']
+export const FOLLOW_UP_STATUSES = ['msg1', 'msg2', 'msg3', 'diagnostico', 'propuesta']
 
 export const LANGUAGES = [
   { id: 'es', label: 'ES 🇪🇸' },

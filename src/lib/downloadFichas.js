@@ -65,22 +65,23 @@ export function downloadClientFichas(items) {
 
 export function downloadProspectFichas(items) {
   const headers = [
-    'Nombre', 'Club / Agencia', 'Email', 'Teléfono', 'Rol',
+    'Nombre', 'Club / Agencia', 'Email', 'Teléfono', 'Web / Instagram', 'Rol',
     'Idioma', 'Estado', 'Fecha Msg 1', 'Fecha Msg 2', 'Fecha Msg 3', 'Notas',
   ]
 
   const rows = items.map(item => [
-    item.name   || '',
-    item.club   || '',
-    item.email  || '',
-    item.phone  || '',
-    item.role   || '',
+    item.name      || '',
+    item.club      || '',
+    item.email     || '',
+    item.phone     || '',
+    item.web_link  || '',
+    item.role      || '',
     item.lang === 'en' ? 'English' : 'Español',
-    item.status || '',
-    fmtDate(item.date_msg1),
-    fmtDate(item.date_msg2),
-    fmtDate(item.date_msg3),
-    item.notes  || '',
+    item.status    || '',
+    fmtDate(item.msg1_fecha),
+    fmtDate(item.msg2_fecha),
+    fmtDate(item.msg3_fecha),
+    item.notes     || '',
   ])
 
   triggerDownload(buildCSV(headers, rows), `prospectos-${isoToday()}.csv`)

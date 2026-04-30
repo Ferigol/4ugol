@@ -90,36 +90,41 @@ export default function Clientes() {
   const handleSave = async () => {
     setSaving(true)
     setSaveError(null)
-    const { data: { user } } = await supabase.auth.getUser()
-    const payload = {
-      user_id:      user.id,
-      name:         form.name,
-      club:         form.club,
-      email:        form.email,
-      telefono:     form.telefono,
-      puesto:       form.puesto,
-      project_name: form.project_name,
-      pack:         form.pack,
-      custom_price: form.pack === 'otro' ? (Number(form.custom_price) || null) : null,
-      payment_type: form.pack === 'otro' ? form.payment_type : 'mensual',
-      lang:         form.lang,
-      start_date:   form.start_date || null,
-      end_date:     form.end_date || null,
-      status:       form.status,
-      notes:        form.notes,
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const payload = {
+        user_id:      user.id,
+        name:         form.name,
+        club:         form.club,
+        email:        form.email,
+        telefono:     form.telefono,
+        puesto:       form.puesto,
+        project_name: form.project_name,
+        pack:         form.pack,
+        custom_price: form.pack === 'otro' ? (Number(form.custom_price) || null) : null,
+        payment_type: form.pack === 'otro' ? form.payment_type : 'mensual',
+        lang:         form.lang,
+        start_date:   form.start_date || null,
+        end_date:     form.end_date || null,
+        status:       form.status,
+        notes:        form.notes,
+      }
+      if (editingId) {
+        const { data: updated, error } = await supabase
+          .from('clients').update(payload).eq('id', editingId).select().single()
+        if (error) throw error
+        setItems(prev => prev.map(i => i.id === editingId ? updated : i))
+      } else {
+        const { data, error } = await supabase.from('clients').insert(payload).select().single()
+        if (error) throw error
+        setItems(prev => [data, ...prev])
+      }
+      setModalForm(false)
+    } catch (err) {
+      setSaveError(err.message || 'Error al guardar. Intenta de nuevo.')
+    } finally {
+      setSaving(false)
     }
-    if (editingId) {
-      const { data: updated, error } = await supabase
-        .from('clients').update(payload).eq('id', editingId).select().single()
-      if (error) { setSaveError(error.message); setSaving(false); return }
-      setItems(prev => prev.map(i => i.id === editingId ? updated : i))
-    } else {
-      const { data, error } = await supabase.from('clients').insert(payload).select().single()
-      if (error) { setSaveError(error.message); setSaving(false); return }
-      setItems(prev => [data, ...prev])
-    }
-    setSaving(false)
-    setModalForm(false)
   }
 
   const handleDelete = async (id) => {
