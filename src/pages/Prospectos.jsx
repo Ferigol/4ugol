@@ -10,11 +10,10 @@ import Badge, { LangBadge } from '../components/Badge'
 import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X } from 'lucide-react'
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
-const MSG_DATE_FIELDS = { msg1: 'date_msg1', msg2: 'date_msg2', msg3: 'date_msg3' }
+const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha' }
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const formatMsgDate = (ts) => { if (!ts) return null; const d = new Date(ts); return `${d.getDate()} ${MONTH_ABBR[d.getMonth()]} ${d.getFullYear()}` }
-const tsToDateInput = (ts) => ts ? new Date(ts).toISOString().split('T')[0] : ''
-const dateInputToTs = (d) => d ? new Date(d + 'T12:00:00Z').toISOString() : null
+const formatMsgDate = (d) => { if (!d) return null; const [y, m, day] = d.split('-'); return `${parseInt(day)} ${MONTH_ABBR[parseInt(m) - 1]} ${y}` }
+const todayDate = () => new Date().toISOString().split('T')[0]
 
 const INP = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] text-white placeholder-[#444] focus:outline-none focus:border-[#E8410A] focus:ring-1 focus:ring-[#E8410A]/20 transition-all'
 const SEL = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer transition-all'
@@ -22,7 +21,8 @@ const LBL = 'block text-xs font-medium text-[#666] mb-1.5'
 
 const defaultForm = {
   name: '', club: '', email: '', phone: '', role: '', lang: 'es', status: 'nuevo', notes: '',
-  msg1: '', msg2: '', msg3: '',
+  msg1_texto: '', msg2_texto: '', msg3_texto: '',
+  msg1_fecha: '', msg2_fecha: '', msg3_fecha: '',
 }
 
 const SectionHeader = ({ label }) => (
@@ -82,10 +82,8 @@ export default function Prospectos() {
       name: item.name, club: item.club || '', email: item.email || '',
       phone: item.phone || '', role: item.role || '',
       lang: item.lang || 'es', status: item.status, notes: item.notes || '',
-      msg1: item.msg1 || '', msg2: item.msg2 || '', msg3: item.msg3 || '',
-      date_msg1: tsToDateInput(item.date_msg1),
-      date_msg2: tsToDateInput(item.date_msg2),
-      date_msg3: tsToDateInput(item.date_msg3),
+      msg1_texto: item.msg1_texto || '', msg2_texto: item.msg2_texto || '', msg3_texto: item.msg3_texto || '',
+      msg1_fecha: item.msg1_fecha || '', msg2_fecha: item.msg2_fecha || '', msg3_fecha: item.msg3_fecha || '',
     })
     setSaveError('')
     setEditingId(item.id)
@@ -97,18 +95,14 @@ export default function Prospectos() {
     setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const { date_msg1, date_msg2, date_msg3, ...formCore } = form
-      const payload = { ...formCore, user_id: user.id }
+      const payload = { ...form, user_id: user.id }
       if (editingId) {
-        payload.date_msg1 = dateInputToTs(date_msg1)
-        payload.date_msg2 = dateInputToTs(date_msg2)
-        payload.date_msg3 = dateInputToTs(date_msg3)
         const { error } = await supabase.from('prospects').update(payload).eq('id', editingId)
         if (error) throw error
         setItems(prev => prev.map(i => i.id === editingId ? { ...i, ...payload } : i))
       } else {
         const dateField = MSG_DATE_FIELDS[payload.status]
-        if (dateField) payload[dateField] = new Date().toISOString()
+        if (dateField && !payload[dateField]) payload[dateField] = todayDate()
         const { data, error } = await supabase.from('prospects').insert(payload).select().single()
         if (error) throw error
         setItems(prev => [data, ...prev])
@@ -129,11 +123,10 @@ export default function Prospectos() {
 
   const handleStatusChange = async (id, newStatus) => {
     const dateField = MSG_DATE_FIELDS[newStatus]
-    const now = new Date().toISOString()
     const updates = { status: newStatus }
     if (dateField) {
       const existing = items.find(i => i.id === id)
-      if (!existing?.[dateField]) updates[dateField] = now
+      if (!existing?.[dateField]) updates[dateField] = todayDate()
     }
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i))
     await supabase.from('prospects').update(updates).eq('id', id)
@@ -241,11 +234,11 @@ export default function Prospectos() {
                 </div>
                 <p className="text-sm font-bold text-white leading-tight mt-1">{item.name}</p>
                 {item.club && <p className="text-xs text-[#555] mt-0.5">{item.club}</p>}
-                {(item.date_msg1 || item.date_msg2 || item.date_msg3) && (
+                {(item.msg1_fecha || item.msg2_fecha || item.msg3_fecha) && (
                   <div className="flex flex-col gap-0.5 mt-1.5">
-                    {item.date_msg1 && <span className="text-[10px] text-[#444]">MSJ 1: {formatMsgDate(item.date_msg1)}</span>}
-                    {item.date_msg2 && <span className="text-[10px] text-[#444]">MSJ 2: {formatMsgDate(item.date_msg2)}</span>}
-                    {item.date_msg3 && <span className="text-[10px] text-[#444]">MSJ 3: {formatMsgDate(item.date_msg3)}</span>}
+                    {item.msg1_fecha && <span className="text-[10px] text-[#444]">MSJ 1: {formatMsgDate(item.msg1_fecha)}</span>}
+                    {item.msg2_fecha && <span className="text-[10px] text-[#444]">MSJ 2: {formatMsgDate(item.msg2_fecha)}</span>}
+                    {item.msg3_fecha && <span className="text-[10px] text-[#444]">MSJ 3: {formatMsgDate(item.msg3_fecha)}</span>}
                   </div>
                 )}
               </div>
@@ -322,9 +315,9 @@ export default function Prospectos() {
           </div>
 
           {[
-            { key: 'msg1', dateKey: 'date_msg1', label: 'Mensaje 1' },
-            { key: 'msg2', dateKey: 'date_msg2', label: 'Mensaje 2' },
-            { key: 'msg3', dateKey: 'date_msg3', label: 'Mensaje 3' },
+            { key: 'msg1_texto', dateKey: 'msg1_fecha', label: 'Mensaje 1' },
+            { key: 'msg2_texto', dateKey: 'msg2_fecha', label: 'Mensaje 2' },
+            { key: 'msg3_texto', dateKey: 'msg3_fecha', label: 'Mensaje 3' },
           ].map(({ key, dateKey, label }) => (
             <div key={key} className="rounded-xl border border-[#222] bg-[#111] p-3 space-y-2">
               <p className="text-[10px] font-semibold text-[#555] uppercase tracking-wider">{label}</p>
