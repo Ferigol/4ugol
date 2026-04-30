@@ -102,14 +102,31 @@ export default function Prospectos() {
         msg2_fecha: form.msg2_fecha || null,
         msg3_fecha: form.msg3_fecha || null,
       }
+
+      const withoutMissingCols = (p, err) => {
+        if (!err?.message?.includes("schema cache")) return null
+        const match = err.message.match(/find the '(\w+)' column/)
+        if (!match) return null
+        const { [match[1]]: _, ...rest } = p
+        return rest
+      }
+
       if (editingId) {
-        const { error } = await supabase.from('prospects').update(payload).eq('id', editingId)
+        let { error } = await supabase.from('prospects').update(payload).eq('id', editingId)
+        if (error) {
+          const fallback = withoutMissingCols(payload, error)
+          if (fallback) ({ error } = await supabase.from('prospects').update(fallback).eq('id', editingId))
+        }
         if (error) throw error
         setItems(prev => prev.map(i => i.id === editingId ? { ...i, ...payload } : i))
       } else {
         const dateField = MSG_DATE_FIELDS[payload.status]
         if (dateField && !payload[dateField]) payload[dateField] = todayDate()
-        const { data, error } = await supabase.from('prospects').insert(payload).select().single()
+        let { data, error } = await supabase.from('prospects').insert(payload).select().single()
+        if (error) {
+          const fallback = withoutMissingCols(payload, error)
+          if (fallback) ({ data, error } = await supabase.from('prospects').insert(fallback).select().single())
+        }
         if (error) throw error
         setItems(prev => [data, ...prev])
       }
