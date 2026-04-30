@@ -95,7 +95,13 @@ export default function Prospectos() {
     setSaveError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const payload = { ...form, user_id: user.id }
+      const payload = {
+        ...form,
+        user_id: user.id,
+        msg1_fecha: form.msg1_fecha || null,
+        msg2_fecha: form.msg2_fecha || null,
+        msg3_fecha: form.msg3_fecha || null,
+      }
       if (editingId) {
         const { error } = await supabase.from('prospects').update(payload).eq('id', editingId)
         if (error) throw error
