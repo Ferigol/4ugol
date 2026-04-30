@@ -36,9 +36,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
           <h2 className="text-base font-semibold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-[#888] hover:text-white hover:bg-[#1a1a1a] transition-colors cursor-pointer"
           >
-            <X size={16} />
+            <X size={24} />
           </button>
         </div>
 

@@ -20,7 +20,7 @@ const SEL = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#
 const LBL = 'block text-xs font-medium text-[#666] mb-1.5'
 
 const defaultForm = {
-  name: '', club: '', email: '', phone: '', role: '', lang: 'es', status: 'nuevo', notes: '',
+  name: '', club: '', email: '', phone: '', web_link: '', role: '', lang: 'es', status: 'nuevo', notes: '',
   msg1_texto: '', msg2_texto: '', msg3_texto: '',
   msg1_fecha: '', msg2_fecha: '', msg3_fecha: '',
 }
@@ -80,7 +80,7 @@ export default function Prospectos() {
   const openEdit = (item) => {
     setForm({
       name: item.name, club: item.club || '', email: item.email || '',
-      phone: item.phone || '', role: item.role || '',
+      phone: item.phone || '', web_link: item.web_link || '', role: item.role || '',
       lang: item.lang || 'es', status: item.status, notes: item.notes || '',
       msg1_texto: item.msg1_texto || '', msg2_texto: item.msg2_texto || '', msg3_texto: item.msg3_texto || '',
       msg1_fecha: item.msg1_fecha || '', msg2_fecha: item.msg2_fecha || '', msg3_fecha: item.msg3_fecha || '',
@@ -308,6 +308,11 @@ export default function Prospectos() {
               <label className={LBL}>Teléfono</label>
               <input type="tel" className={INP} value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+34 600 000 000" />
             </div>
+          </div>
+
+          <div>
+            <label className={LBL}>Web / Instagram</label>
+            <input type="url" className={INP} value={form.web_link} onChange={e => setForm(f => ({ ...f, web_link: e.target.value }))} placeholder="https://instagram.com/club" />
           </div>
 
           {/* ── Sección 2: Seguimiento LinkedIn ── */}

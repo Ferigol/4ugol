@@ -30,6 +30,9 @@
   ::-webkit-scrollbar-thumb:hover { background: #444; }
 
   option { background: #1a1a1a; color: #fff; }
+
+  input[type="date"] { color-scheme: dark; }
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.45; cursor: pointer; }
 }
 
 @layer utilities {
