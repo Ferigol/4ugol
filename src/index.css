@@ -26,10 +26,10 @@
 
   body { margin: 0; padding: 0; background: #0a0a0a; height: 100%; overflow: hidden; }
 
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #444; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #111; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
 
   option { background: #1a1a1a; color: #fff; }
 
@@ -45,17 +45,17 @@
 
   .kanban-scroll {
     overflow-x: scroll;
-    overflow-y: visible;
+    overflow-y: hidden;
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: #3a3a3a #111;
   }
 
   .kanban-col-body {
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: #3a3a3a transparent;
   }
-  .kanban-col-body::-webkit-scrollbar { width: 3px; }
-  .kanban-col-body::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .kanban-col-body::-webkit-scrollbar { width: 4px; }
+  .kanban-col-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 2px; }
 
   .card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .card-hover:hover { transform: translateY(-2px); }

@@ -83,7 +83,7 @@ export default function KanbanBoard({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 overflow-x-auto kanban-scroll pb-4">
+      <div className="h-full flex gap-4 overflow-x-scroll kanban-scroll">
         {columns.map((col) => {
           const colItems = getColumnItems(col.id)
           return (

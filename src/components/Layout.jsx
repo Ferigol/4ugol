@@ -105,7 +105,7 @@ export default function Layout({ children }) {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1 overflow-y-scroll overflow-x-hidden">
+        <main className="flex-1 overflow-y-scroll overflow-x-hidden flex flex-col">
           {children}
         </main>
       </div>
