@@ -35,6 +35,8 @@ const getGreeting = () => {
   return 'Buenas noches'
 }
 
+const MAX_VISIBLE = 8
+
 export default function Dashboard() {
   const [prospects, setProspects] = useState([])
   const [clients, setClients]     = useState([])
@@ -70,10 +72,12 @@ export default function Dashboard() {
       return db - da
     })
 
-  const urgentCount = pendingFollowUps.filter(p => {
+  const urgentCount      = pendingFollowUps.filter(p => {
     const d = daysSince(getLastContactDate(p))
     return d !== null && d > 7
   }).length
+  const visibleFollowUps = pendingFollowUps.slice(0, MAX_VISIBLE)
+  const hiddenCount      = Math.max(pendingFollowUps.length - MAX_VISIBLE, 0)
 
   const pipeline = PROSPECT_COLUMNS
     .filter(col => FOLLOW_UP_STATUSES.includes(col.id))
@@ -96,210 +100,217 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="bg-[#0a0a0a] min-h-full px-8 py-8 max-w-5xl mx-auto space-y-8">
+    <div className="h-full flex flex-col px-7 py-5 gap-3 max-w-5xl mx-auto w-full overflow-hidden">
 
       {/* ── ZONA 1: Header ── */}
-      <div>
-        <h1 className="text-3xl text-white font-gilroy tracking-tight">
-          {getGreeting()}, Fer
-        </h1>
-        <p className="text-sm text-[#666] mt-1 capitalize">{dateStr}</p>
+      <div className="shrink-0">
+        <h1 className="text-2xl text-white font-gilroy tracking-tight">{getGreeting()}, Fer</h1>
+        <p className="text-xs text-[#666] mt-0.5 capitalize">{dateStr}</p>
       </div>
 
       {/* ── ZONA 2: KPIs ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3">
 
-        <Link
-          to="/clientes"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5 hover:border-[#333] transition-colors"
+        <Link to="/clientes"
+          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-2">MRR actual</p>
+          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">MRR actual</p>
           <p className="text-3xl font-black text-white tracking-tight">${mrr.toLocaleString()}</p>
-          <p className="text-xs text-[#666] mt-1.5">{mrrProgress.toFixed(0)}% de ${MRR_GOAL.toLocaleString()}</p>
+          <p className="text-xs text-[#666] mt-1">{mrrProgress.toFixed(0)}% de ${MRR_GOAL.toLocaleString()}</p>
         </Link>
 
-        <Link
-          to="/clientes"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5 hover:border-[#333] transition-colors"
+        <Link to="/clientes"
+          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-2">Clientes activos</p>
+          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Clientes activos</p>
           <p className="text-3xl font-black text-white tracking-tight">{activeClients}</p>
-          <p className="text-xs text-[#1D9E75] mt-1.5">En progreso</p>
+          <p className="text-xs text-[#1D9E75] mt-1">En progreso</p>
         </Link>
 
-        <Link
-          to="/prospectos"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5 hover:border-[#333] transition-colors"
+        <Link to="/prospectos"
+          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-2">Prospectos activos</p>
+          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Prospectos activos</p>
           <p className="text-3xl font-black text-white tracking-tight">{activeProspects}</p>
-          <p className="text-xs text-[#666] mt-1.5">Sin cerrar</p>
+          <p className="text-xs text-[#666] mt-1">Sin cerrar</p>
         </Link>
 
-        {/* Tarjeta urgentes — fondo y borde especial para que destaque */}
-        <Link
-          to="/prospectos"
-          className="bg-[#1a0b08] rounded-2xl border border-[#E8410A44] p-5 hover:border-[#E8410A]/40 transition-colors"
+        <Link to="/prospectos"
+          className="bg-[#1a0b08] rounded-2xl border border-[#E8410A44] px-5 py-4 hover:border-[#E8410A]/40 transition-colors"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-2">Urgentes</p>
+          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Urgentes</p>
           <p className={`text-3xl font-black tracking-tight ${urgentCount > 0 ? 'text-[#E8410A]' : 'text-white'}`}>
             {urgentCount}
           </p>
-          <p className="text-xs text-[#666] mt-1.5">+7 días sin contacto</p>
+          <p className="text-xs text-[#666] mt-1">+7 días sin contacto</p>
         </Link>
 
       </div>
 
-      {/* ── ZONA 3: Acción de hoy ── */}
-      <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a]">
+      {/* ── ZONA 3+4: Dos columnas ── */}
+      <div className="flex-1 min-h-0 flex gap-4">
 
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-[#2a2a2a]">
-          <div>
-            <h2 className="text-sm font-semibold text-white">Acción de hoy</h2>
-            <p className="text-xs text-[#666] mt-0.5">
-              {pendingFollowUps.length > 0
-                ? `${pendingFollowUps.length} prospecto${pendingFollowUps.length !== 1 ? 's' : ''} pendiente${pendingFollowUps.length !== 1 ? 's' : ''}`
-                : 'Todo al día'}
+        {/* Columna izquierda — Acción de hoy (60%) */}
+        <div className="w-3/5 flex flex-col min-h-0">
+          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
+
+            <div className="shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-[#2a2a2a]">
+              <div>
+                <h2 className="text-sm font-semibold text-white">Acción de hoy</h2>
+                <p className="text-xs text-[#666] mt-0.5">
+                  {pendingFollowUps.length > 0
+                    ? `${pendingFollowUps.length} pendiente${pendingFollowUps.length !== 1 ? 's' : ''}`
+                    : 'Todo al día'}
+                </p>
+              </div>
+              <Link to="/prospectos"
+                className="text-xs text-[#666] hover:text-white flex items-center gap-1 transition-colors"
+              >
+                Ver todos <ArrowRight size={11} />
+              </Link>
+            </div>
+
+            {pendingFollowUps.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                <CheckCircle2 size={28} className="text-[#1D9E75]" />
+                <p className="text-sm font-semibold text-white">Todo al día</p>
+                <p className="text-xs text-[#666]">No hay prospectos pendientes</p>
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                {visibleFollowUps.map((p) => {
+                  const days = daysSince(getLastContactDate(p))
+                  const isCritical = days !== null && days > 14
+                  const isUrgent   = days !== null && days > 7
+                  return (
+                    <Link
+                      key={p.id}
+                      to={`/prospectos?id=${p.id}`}
+                      className="shrink-0 flex items-center justify-between px-5 py-3 hover:bg-[#1c1c1c] transition-colors group"
+                      style={{ borderBottom: '0.5px solid #222' }}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-[#111] border border-[#2a2a2a] flex items-center justify-center text-white text-xs font-bold shrink-0 group-hover:border-[#E8410A]/30 transition-colors">
+                          {p.name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white truncate leading-tight">{p.name}</p>
+                          <p className="text-xs text-[#666] truncate leading-tight">{p.club || '—'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <span className="text-[11px] font-medium text-[#555] px-2 py-0.5 rounded-md bg-[#111]">
+                          {STATUS_LABELS[p.status] || p.status}
+                        </span>
+                        {days !== null && (
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md min-w-[34px] text-center ${
+                            isCritical  ? 'bg-red-950 text-red-400'
+                            : isUrgent  ? 'bg-[#2a1810] text-[#E8410A]'
+                            : 'bg-[#111] text-[#555]'
+                          }`}>
+                            {days}d
+                          </span>
+                        )}
+                        <ArrowRight size={12} className="text-[#333] group-hover:text-[#E8410A] transition-colors" />
+                      </div>
+                    </Link>
+                  )
+                })}
+                {hiddenCount > 0 && (
+                  <Link
+                    to="/prospectos"
+                    className="shrink-0 flex items-center gap-1.5 px-5 py-3 text-xs text-[#666] hover:text-white transition-colors mt-auto border-t border-[#222]"
+                  >
+                    <ArrowRight size={11} />
+                    Ver {hiddenCount} prospecto{hiddenCount !== 1 ? 's' : ''} más
+                  </Link>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* Columna derecha — Métricas secundarias (40%) */}
+        <div className="w-2/5 flex flex-col gap-3 min-h-0">
+
+          {/* Pipeline */}
+          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
+            <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-3 shrink-0">Pipeline</p>
+            <div className="flex-1 min-h-0 flex flex-col justify-around">
+              {pipeline.map(col => {
+                const pct = activeProspects > 0 ? (col.count / activeProspects) * 100 : 0
+                return (
+                  <div key={col.id}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-[#666]">{col.label}</span>
+                      <span className="text-xs font-semibold text-white">{col.count}</span>
+                    </div>
+                    <div className="w-full h-1 bg-[#222] rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#E8410A]/50 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Meta MRR */}
+          <div className="shrink-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4">
+            <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-3">Meta MRR</p>
+            <div className="flex items-end justify-between mb-2">
+              <span className="text-xl font-black text-white">${mrr.toLocaleString()}</span>
+              <span className="text-xs font-bold text-[#444]">${MRR_GOAL.toLocaleString()}</span>
+            </div>
+            <div className="w-full h-1.5 bg-[#222] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#E8410A] rounded-full transition-all duration-700"
+                style={{ width: `${mrrProgress}%` }}
+              />
+            </div>
+            <p className={`text-xs mt-2 ${clientsNeeded > 0 ? 'text-[#666]' : 'text-[#1D9E75]'}`}>
+              {clientsNeeded > 0
+                ? `Faltan ~${clientsNeeded} pack 4-3-3`
+                : '¡Meta superada!'}
             </p>
           </div>
-          <Link
-            to="/prospectos"
-            className="text-xs text-[#666] hover:text-white flex items-center gap-1 transition-colors"
-          >
-            Ver todos <ArrowRight size={11} />
-          </Link>
-        </div>
 
-        {pendingFollowUps.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-3">
-            <CheckCircle2 size={32} className="text-[#1D9E75]" />
-            <p className="text-sm font-semibold text-white">Todo al día</p>
-            <p className="text-xs text-[#666]">No hay prospectos pendientes de contacto</p>
-          </div>
-        ) : (
-          <div>
-            {pendingFollowUps.map((p) => {
-              const days = daysSince(getLastContactDate(p))
-              const isCritical = days !== null && days > 14
-              const isUrgent   = days !== null && days > 7
-              return (
-                <Link
-                  key={p.id}
-                  to={`/prospectos?id=${p.id}`}
-                  className="flex items-center justify-between px-6 py-3.5 hover:bg-[#1c1c1c] transition-colors group"
-                  style={{ borderBottom: '0.5px solid #222' }}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-[#111] border border-[#2a2a2a] flex items-center justify-center text-white text-xs font-bold shrink-0 group-hover:border-[#E8410A]/30 transition-colors">
-                      {p.name?.[0]?.toUpperCase() || '?'}
+          {/* Clientes recientes */}
+          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between mb-3">
+              <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest">Clientes recientes</p>
+              <Link to="/clientes" className="text-[11px] text-[#666] hover:text-white transition-colors">
+                Ver todos
+              </Link>
+            </div>
+            {recentClients.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-xs text-[#444]">Sin clientes aún</p>
+              </div>
+            ) : (
+              <div className="flex-1 min-h-0 flex flex-col justify-around">
+                {recentClients.map(c => (
+                  <div key={c.id} className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[#0f2a1f] border border-[#1D9E75]/20 flex items-center justify-center text-[#1D9E75] text-xs font-bold shrink-0">
+                      {c.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{p.name}</p>
-                      <p className="text-xs text-[#666] truncate">{p.club || '—'}</p>
+                      <p className="text-xs font-semibold text-white truncate">{c.name}</p>
+                      <p className="text-[10px] text-[#666] truncate">{c.pack || '—'}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-4">
-                    <span className="text-[11px] font-medium text-[#555] px-2 py-0.5 rounded-md bg-[#111]">
-                      {STATUS_LABELS[p.status] || p.status}
+                    <span className="text-[10px] font-semibold text-[#1D9E75] bg-[#0f2a1f] px-1.5 py-0.5 rounded ml-auto shrink-0">
+                      {c.status}
                     </span>
-                    {days !== null && (
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md min-w-[36px] text-center ${
-                        isCritical
-                          ? 'bg-red-950 text-red-400'
-                          : isUrgent
-                            ? 'bg-[#2a1810] text-[#E8410A]'
-                            : 'bg-[#111] text-[#555]'
-                      }`}>
-                        {days}d
-                      </span>
-                    )}
-                    <ArrowRight size={13} className="text-[#333] group-hover:text-[#E8410A] transition-colors" />
                   </div>
-                </Link>
-              )
-            })}
+                ))}
+              </div>
+            )}
           </div>
-        )}
 
-      </div>
-
-      {/* ── ZONA 4: Métricas secundarias ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* 4a · Meta MRR */}
-        <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5">
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-4">Meta MRR</p>
-          <div className="flex items-end justify-between mb-3">
-            <span className="text-2xl font-black text-white">${mrr.toLocaleString()}</span>
-            <span className="text-sm font-bold text-[#444]">${MRR_GOAL.toLocaleString()}</span>
-          </div>
-          <div className="w-full h-1.5 bg-[#222] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#E8410A] rounded-full transition-all duration-700"
-              style={{ width: `${mrrProgress}%` }}
-            />
-          </div>
-          <p className={`text-xs mt-3 ${clientsNeeded > 0 ? 'text-[#666]' : 'text-[#1D9E75]'}`}>
-            {clientsNeeded > 0
-              ? `Faltan ~${clientsNeeded} cliente${clientsNeeded !== 1 ? 's' : ''} pack 4-3-3`
-              : '¡Meta superada!'}
-          </p>
         </div>
-
-        {/* 4b · Pipeline */}
-        <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5">
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-4">Pipeline</p>
-          <div className="space-y-3">
-            {pipeline.map(col => {
-              const pct = activeProspects > 0 ? (col.count / activeProspects) * 100 : 0
-              return (
-                <div key={col.id}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs text-[#666]">{col.label}</span>
-                    <span className="text-xs font-semibold text-white">{col.count}</span>
-                  </div>
-                  <div className="w-full h-1 bg-[#222] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#E8410A]/50 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* 4c · Clientes recientes */}
-        <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest">Clientes recientes</p>
-            <Link to="/clientes" className="text-[11px] text-[#666] hover:text-white transition-colors">
-              Ver todos
-            </Link>
-          </div>
-          {recentClients.length === 0 ? (
-            <p className="text-xs text-[#444] py-6 text-center">Sin clientes aún</p>
-          ) : (
-            <div className="space-y-3">
-              {recentClients.map(c => (
-                <div key={c.id} className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-full bg-[#0f2a1f] border border-[#1D9E75]/20 flex items-center justify-center text-[#1D9E75] text-xs font-bold shrink-0">
-                    {c.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-white truncate">{c.name}</p>
-                    <p className="text-[10px] text-[#666] truncate">{c.pack || '—'}</p>
-                  </div>
-                  <span className="text-[10px] font-semibold text-[#1D9E75] bg-[#0f2a1f] px-1.5 py-0.5 rounded ml-auto shrink-0">
-                    {c.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
       </div>
     </div>
   )
