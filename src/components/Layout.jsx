@@ -21,8 +21,8 @@ export default function Layout({ children }) {
 
   const Sidebar = ({ mobile = false }) => (
     <aside className={`
-      ${mobile ? 'fixed inset-y-0 left-0 z-40 w-[200px]' : 'hidden lg:flex w-[200px] sticky top-0 h-screen'}
-      bg-[#111111] flex flex-col shrink-0 border-r border-[#1a1a1a]
+      ${mobile ? 'fixed inset-y-0 left-0 z-40 w-[200px]' : 'hidden lg:flex min-w-[180px] max-w-[180px] sticky top-0 h-screen'}
+      bg-[#111111] flex flex-col shrink-0 border-r border-[#1a1a1a] overflow-hidden
     `}>
       {/* Logo */}
       <div className="flex items-center px-5 py-5 border-b border-[#1a1a1a]">
@@ -92,7 +92,7 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a] sticky top-0 z-20">
           <button
