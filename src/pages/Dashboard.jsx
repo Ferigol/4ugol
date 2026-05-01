@@ -72,13 +72,20 @@ export default function Dashboard() {
       return db - da
     })
 
-  const urgentFollowUps  = pendingFollowUps.filter(p => {
+  const urgentFollowUps    = pendingFollowUps.filter(p => {
     const d = daysSince(getLastContactDate(p))
     return d !== null && d > 7
   })
-  const urgentCount      = urgentFollowUps.length
-  const visibleFollowUps = urgentFollowUps.slice(0, MAX_VISIBLE)
-  const hiddenCount      = Math.max(urgentFollowUps.length - MAX_VISIBLE, 0)
+  const nonUrgentFollowUps = pendingFollowUps.filter(p => {
+    const d = daysSince(getLastContactDate(p))
+    return d === null || d <= 7
+  })
+  const urgentCount   = urgentFollowUps.length
+  const slotsLeft     = Math.max(MAX_VISIBLE - urgentCount, 0)
+  const fillerItems   = nonUrgentFollowUps.slice(0, slotsLeft)
+  const fillerCount   = fillerItems.length
+  const visibleFollowUps = [...urgentFollowUps.slice(0, MAX_VISIBLE), ...fillerItems]
+  const hiddenCount      = Math.max(urgentCount - MAX_VISIBLE, 0)
 
   const pipeline = PROSPECT_COLUMNS
     .filter(col => FOLLOW_UP_STATUSES.includes(col.id))
@@ -159,9 +166,12 @@ export default function Dashboard() {
               <div>
                 <h2 className="text-sm font-semibold text-white">Acción de hoy</h2>
                 <p className="text-xs text-[#666] mt-0.5">
-                  {urgentCount > 0
-                    ? `${urgentCount} urgente${urgentCount !== 1 ? 's' : ''}`
-                    : 'Todo al día'}
+                  {urgentCount === 0 && fillerCount === 0
+                    ? 'Todo al día'
+                    : [
+                        urgentCount > 0 && `${urgentCount} urgente${urgentCount !== 1 ? 's' : ''}`,
+                        fillerCount  > 0 && `${fillerCount} en seguimiento`,
+                      ].filter(Boolean).join(' · ')}
                 </p>
               </div>
               <Link to="/prospectos"
@@ -171,7 +181,7 @@ export default function Dashboard() {
               </Link>
             </div>
 
-            {urgentFollowUps.length === 0 ? (
+            {visibleFollowUps.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3">
                 <CheckCircle2 size={28} className="text-[#1D9E75]" />
                 <p className="text-sm font-semibold text-white">Todo al día</p>
