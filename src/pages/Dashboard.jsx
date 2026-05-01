@@ -72,12 +72,13 @@ export default function Dashboard() {
       return db - da
     })
 
-  const urgentCount      = pendingFollowUps.filter(p => {
+  const urgentFollowUps  = pendingFollowUps.filter(p => {
     const d = daysSince(getLastContactDate(p))
     return d !== null && d > 7
-  }).length
-  const visibleFollowUps = pendingFollowUps.slice(0, MAX_VISIBLE)
-  const hiddenCount      = Math.max(pendingFollowUps.length - MAX_VISIBLE, 0)
+  })
+  const urgentCount      = urgentFollowUps.length
+  const visibleFollowUps = urgentFollowUps.slice(0, MAX_VISIBLE)
+  const hiddenCount      = Math.max(urgentFollowUps.length - MAX_VISIBLE, 0)
 
   const pipeline = PROSPECT_COLUMNS
     .filter(col => FOLLOW_UP_STATUSES.includes(col.id))
@@ -158,8 +159,8 @@ export default function Dashboard() {
               <div>
                 <h2 className="text-sm font-semibold text-white">Acción de hoy</h2>
                 <p className="text-xs text-[#666] mt-0.5">
-                  {pendingFollowUps.length > 0
-                    ? `${pendingFollowUps.length} pendiente${pendingFollowUps.length !== 1 ? 's' : ''}`
+                  {urgentCount > 0
+                    ? `${urgentCount} urgente${urgentCount !== 1 ? 's' : ''}`
                     : 'Todo al día'}
                 </p>
               </div>
@@ -170,7 +171,7 @@ export default function Dashboard() {
               </Link>
             </div>
 
-            {pendingFollowUps.length === 0 ? (
+            {urgentFollowUps.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3">
                 <CheckCircle2 size={28} className="text-[#1D9E75]" />
                 <p className="text-sm font-semibold text-white">Todo al día</p>
@@ -186,7 +187,7 @@ export default function Dashboard() {
                     <Link
                       key={p.id}
                       to={`/prospectos?id=${p.id}`}
-                      className="shrink-0 flex items-center justify-between px-5 py-3 hover:bg-[#1c1c1c] transition-colors group"
+                      className="flex-1 flex items-center justify-between px-5 hover:bg-[#1c1c1c] transition-colors group"
                       style={{ borderBottom: '0.5px solid #222' }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -299,7 +300,11 @@ export default function Dashboard() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-white truncate">{c.name}</p>
-                      <p className="text-[10px] text-[#666] truncate">{c.pack || '—'}</p>
+                      <p className="text-[10px] text-[#666] truncate">
+                        {c.pack === 'otro'
+                          ? (c.custom_price ? `$${Number(c.custom_price).toLocaleString()}/mes` : '—')
+                          : (c.pack || '—')}
+                      </p>
                     </div>
                     <span className="text-[10px] font-semibold text-[#1D9E75] bg-[#0f2a1f] px-1.5 py-0.5 rounded ml-auto shrink-0">
                       {c.status}
