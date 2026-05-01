@@ -79,7 +79,7 @@ export default function Layout({ children }) {
   )
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a]">
+    <div className="flex h-screen bg-[#0a0a0a]">
       <Sidebar />
 
       {mobileOpen && (
@@ -92,7 +92,7 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a] sticky top-0 z-20">
           <button
@@ -105,7 +105,7 @@ export default function Layout({ children }) {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1">
+        <main className="flex-1 overflow-y-scroll overflow-x-hidden">
           {children}
         </main>
       </div>

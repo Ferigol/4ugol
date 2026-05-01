@@ -21,10 +21,10 @@
     background: #0a0a0a;
     color: #fff;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
   }
 
-  body { margin: 0; padding: 0; background: #0a0a0a; height: 100%; overflow: auto; }
+  body { margin: 0; padding: 0; background: #0a0a0a; height: 100%; overflow: hidden; }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -44,7 +44,7 @@
   }
 
   .kanban-scroll {
-    overflow-x: auto;
+    overflow-x: scroll;
     overflow-y: visible;
     scrollbar-width: thin;
     scrollbar-color: #333 transparent;
