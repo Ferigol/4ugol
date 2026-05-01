@@ -21,7 +21,7 @@ export default function Layout({ children }) {
 
   const Sidebar = ({ mobile = false }) => (
     <aside className={`
-      ${mobile ? 'fixed inset-y-0 left-0 z-40 w-[200px]' : 'hidden lg:flex w-[200px]'}
+      ${mobile ? 'fixed inset-y-0 left-0 z-40 w-[200px]' : 'hidden lg:flex w-[200px] sticky top-0 h-screen'}
       bg-[#111111] flex flex-col shrink-0 border-r border-[#1a1a1a]
     `}>
       {/* Logo */}
@@ -79,7 +79,7 @@ export default function Layout({ children }) {
   )
 
   return (
-    <div className="flex h-screen bg-[#0a0a0a] overflow-hidden">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
 
       {mobileOpen && (
@@ -92,9 +92,9 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col">
         {/* Mobile header */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a]">
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#111111] border-b border-[#1a1a1a] sticky top-0 z-20">
           <button
             onClick={() => setMobileOpen(true)}
             className="p-2 rounded-lg text-[#555] hover:text-white hover:bg-[#1a1a1a] cursor-pointer"
@@ -105,7 +105,7 @@ export default function Layout({ children }) {
           <div className="w-9" />
         </div>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1">
           {children}
         </main>
       </div>

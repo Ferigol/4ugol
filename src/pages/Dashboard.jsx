@@ -102,13 +102,13 @@ export default function Dashboard() {
   const dateStr = `${DAY_NAMES[now.getDay()]} ${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} · ${now.getFullYear()}`
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full bg-[#0a0a0a]">
+    <div className="flex items-center justify-center min-h-screen bg-[#0a0a0a]">
       <Loader2 className="animate-spin text-[#E8410A]" size={28} />
     </div>
   )
 
   return (
-    <div className="h-full flex flex-col px-7 py-5 gap-3 max-w-5xl mx-auto w-full overflow-hidden">
+    <div className="flex flex-col px-7 py-5 gap-3 max-w-5xl mx-auto w-full">
 
       {/* ── ZONA 1: Header ── */}
       <div className="shrink-0">
@@ -156,11 +156,11 @@ export default function Dashboard() {
       </div>
 
       {/* ── ZONA 3+4: Dos columnas ── */}
-      <div className="flex-1 min-h-0 flex gap-4">
+      <div className="flex gap-4 h-[520px]">
 
         {/* Columna izquierda — Acción de hoy (60%) */}
-        <div className="w-3/5 flex flex-col min-h-0">
-          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
+        <div className="w-3/5 flex flex-col">
+          <div className="flex-1 bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
 
             <div className="shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-[#2a2a2a]">
               <div>
@@ -188,7 +188,7 @@ export default function Dashboard() {
                 <p className="text-xs text-[#666]">No hay prospectos pendientes</p>
               </div>
             ) : (
-              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden">
                 {visibleFollowUps.map((p) => {
                   const days = daysSince(getLastContactDate(p))
                   const isCritical = days !== null && days > 14
@@ -243,12 +243,12 @@ export default function Dashboard() {
         </div>
 
         {/* Columna derecha — Métricas secundarias (40%) */}
-        <div className="w-2/5 flex flex-col gap-3 min-h-0">
+        <div className="w-2/5 flex flex-col gap-3">
 
           {/* Pipeline */}
-          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
+          <div className="flex-1 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
             <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-3 shrink-0">Pipeline</p>
-            <div className="flex-1 min-h-0 flex flex-col justify-around">
+            <div className="flex-1 flex flex-col justify-around">
               {pipeline.map(col => {
                 const pct = activeProspects > 0 ? (col.count / activeProspects) * 100 : 0
                 return (
@@ -290,7 +290,7 @@ export default function Dashboard() {
           </div>
 
           {/* Clientes recientes */}
-          <div className="flex-1 min-h-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
+          <div className="flex-1 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
             <div className="shrink-0 flex items-center justify-between mb-3">
               <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest">Clientes recientes</p>
               <Link to="/clientes" className="text-[11px] text-[#666] hover:text-white transition-colors">
@@ -302,7 +302,7 @@ export default function Dashboard() {
                 <p className="text-xs text-[#444]">Sin clientes aún</p>
               </div>
             ) : (
-              <div className="flex-1 min-h-0 flex flex-col justify-around">
+              <div className="flex-1 flex flex-col justify-around">
                 {recentClients.map(c => (
                   <div key={c.id} className="flex items-center gap-3">
                     <div className="w-7 h-7 rounded-full bg-[#0f2a1f] border border-[#1D9E75]/20 flex items-center justify-center text-[#1D9E75] text-xs font-bold shrink-0">
