@@ -35,7 +35,7 @@ const getGreeting = () => {
   return 'Buenas noches'
 }
 
-const MAX_VISIBLE = 8
+const MAX_VISIBLE = 10
 
 export default function Dashboard() {
   const [prospects, setProspects] = useState([])
@@ -45,7 +45,7 @@ export default function Dashboard() {
   useEffect(() => {
     Promise.all([
       supabase.from('prospects').select('*'),
-      supabase.from('clients').select('*'),
+      supabase.from('clients').select('*').order('created_at', { ascending: false }),
     ]).then(([{ data: p }, { data: c }]) => {
       setProspects(p || [])
       setClients(c || [])
@@ -94,8 +94,8 @@ export default function Dashboard() {
       count: prospects.filter(p => p.status === col.id).length,
     }))
 
-  const recentClients = [...clients]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  const recentClients = clients
+    .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
     .slice(0, 3)
 
   const now = new Date()
@@ -156,11 +156,11 @@ export default function Dashboard() {
       </div>
 
       {/* ── ZONA 3+4: Dos columnas ── */}
-      <div className="flex gap-4 items-start">
+      <div className="flex gap-4 items-stretch">
 
         {/* Columna izquierda — Acción de hoy (60%) */}
         <div className="w-3/5 flex flex-col">
-          <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
+          <div className="h-full bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
 
             <div className="shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-[#2a2a2a]">
               <div>
