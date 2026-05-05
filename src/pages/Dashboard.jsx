@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PACK_PRICES, FOLLOW_UP_STATUSES, MRR_GOAL, PROSPECT_COLUMNS } from '../lib/constants'
 import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
@@ -7,10 +7,16 @@ import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 const DAY_NAMES   = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
 const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 
-const STATUS_LABELS = {
-  msg1: 'Msg 1', msg2: 'Msg 2', msg3: 'Msg 3',
-  diagnostico: 'Diagnóstico', propuesta: 'Propuesta',
+
+const NEXT_ACTION_LABEL = {
+  msg1:        name => `Enviar MSG2 a ${name}`,
+  msg2:        name => `Enviar MSG3 a ${name}`,
+  msg3:        name => `Llamar a ${name}`,
+  diagnostico: name => `Seguimiento diagnóstico con ${name}`,
+  propuesta:   name => `Seguir propuesta con ${name}`,
 }
+const getNextAction = (p) =>
+  (NEXT_ACTION_LABEL[p.status] || (name => `Contactar a ${name}`))(p.name || '—')
 
 const daysSince = (dateStr) => {
   if (!dateStr) return null
@@ -37,7 +43,28 @@ const getGreeting = () => {
 
 const MAX_VISIBLE = 10
 
+const fireUrgentNotification = (count, onNavigate) => {
+  const already = sessionStorage.getItem('4ugol-notif-urgentes')
+  if (already) return
+  const send = () => {
+    sessionStorage.setItem('4ugol-notif-urgentes', '1')
+    const notif = new Notification('4uGOL — Seguimiento pendiente', {
+      body: `${count} prospecto${count !== 1 ? 's' : ''} con más de 7 días sin contacto`,
+      icon: '/favicon.ico',
+      tag: '4ugol-urgentes',
+      requireInteraction: false,
+    })
+    notif.onclick = () => { window.focus(); onNavigate() }
+  }
+  if (!('Notification' in window)) return
+  if (Notification.permission === 'granted') { send(); return }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(perm => { if (perm === 'granted') send() })
+  }
+}
+
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [prospects, setProspects] = useState([])
   const [clients, setClients]     = useState([])
   const [loading, setLoading]     = useState(true)
@@ -52,6 +79,16 @@ export default function Dashboard() {
       setLoading(false)
     })
   }, [])
+
+  useEffect(() => {
+    if (!prospects.length) return
+    const urgentCount = prospects.filter(p => {
+      const d = daysSince(getLastContactDate(p))
+      return d !== null && d > 7
+    }).length
+    if (urgentCount === 0) return
+    fireUrgentNotification(urgentCount, () => navigate('/prospectos'))
+  }, [prospects, navigate])
 
   const mrr = clients
     .filter(c => c.status !== 'pagado')
@@ -206,17 +243,16 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-white truncate leading-tight">{p.name}</p>
-                          <p className="text-xs text-[#666] truncate leading-tight">{p.club || '—'}</p>
+                          <p className="text-xs text-[#E8410A] truncate leading-tight font-medium mt-0.5">
+                            {getNextAction(p)}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-3">
-                        <span className="text-[11px] font-medium text-[#555] px-2 py-0.5 rounded-md bg-[#111]">
-                          {STATUS_LABELS[p.status] || p.status}
-                        </span>
                         {days !== null && (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md min-w-[34px] text-center ${
-                            isCritical  ? 'bg-red-950 text-red-400'
-                            : isUrgent  ? 'bg-[#2a1810] text-[#E8410A]'
+                            isCritical ? 'bg-red-950 text-red-400'
+                            : isUrgent ? 'bg-[#2a1810] text-[#E8410A]'
                             : 'bg-[#111] text-[#555]'
                           }`}>
                             {days}d

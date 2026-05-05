@@ -11,6 +11,10 @@ import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search,
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha' }
+const CONTACT_DATE_FIELD = {
+  msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha',
+  diagnostico: 'msg3_fecha', propuesta: 'msg3_fecha',
+}
 const MONTH_ABBR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const formatMsgDate = (d) => { if (!d) return null; const [y, m, day] = d.split('-'); return `${parseInt(day)} ${MONTH_ABBR[parseInt(m) - 1]} ${y}` }
 const todayDate = () => new Date().toISOString().split('T')[0]
@@ -76,7 +80,7 @@ const DaysBadge = ({ days }) => {
   return <span className="inline-flex px-1.5 py-0.5 rounded-md text-xs font-semibold bg-[#1a1a1a] text-[#555]">{days}d</span>
 }
 
-const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 28px'
+const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 60px 28px'
 
 export default function Prospectos() {
   const navigate = useNavigate()
@@ -99,6 +103,8 @@ export default function Prospectos() {
   const [sortField, setSortField] = useState('name')
   const [sortDir, setSortDir] = useState('asc')
   const [activeFilter, setActiveFilter] = useState('all')
+  const [contactingId, setContactingId] = useState(null)
+  const [contactedId, setContactedId]   = useState(null)
 
   useEffect(() => {
     const targetId = searchParams.get('id')
@@ -268,6 +274,19 @@ export default function Prospectos() {
       const rest = prev.filter(i => i.status !== colId)
       return [...rest, ...reordered]
     })
+  }
+
+  const handleContactedToday = async (e, item) => {
+    e.stopPropagation()
+    const field = CONTACT_DATE_FIELD[item.status]
+    if (!field || contactingId) return
+    setContactingId(item.id)
+    const today = todayDate()
+    await supabase.from('prospects').update({ [field]: today }).eq('id', item.id)
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, [field]: today } : i))
+    setContactingId(null)
+    setContactedId(item.id)
+    setTimeout(() => setContactedId(prev => prev === item.id ? null : prev), 1800)
   }
 
   const openMsg = (item) => { setModalMsg(item); setMsgLang(item.lang || 'es'); setCopied(false) }
@@ -478,6 +497,7 @@ export default function Prospectos() {
               <SortBtn field="status" label="Estado"       sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               <SortBtn field="days"   label="Sin contacto" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               <SortBtn field="date"   label="Último msg"   sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Hoy</span>
               <div />
             </div>
 
@@ -514,6 +534,24 @@ export default function Prospectos() {
 
                   <div className="text-xs text-[#555]">
                     {lastDate ? formatMsgDate(lastDate) : <span className="text-[#333]">—</span>}
+                  </div>
+
+                  <div className="flex items-center">
+                    {CONTACT_DATE_FIELD[item.status] ? (
+                      <button
+                        onClick={(e) => handleContactedToday(e, item)}
+                        disabled={!!contactingId}
+                        className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-40 ${
+                          contactedId === item.id
+                            ? 'bg-[#0f2a1f] text-[#1D9E75] border border-[#1D9E75]/30'
+                            : 'bg-[#111] text-[#555] border border-[#222] hover:border-[#1D9E75]/40 hover:text-[#1D9E75]'
+                        }`}
+                      >
+                        {contactingId === item.id ? '...' : contactedId === item.id ? '✓' : 'Hoy'}
+                      </button>
+                    ) : (
+                      <span />
+                    )}
                   </div>
 
                   <div className="flex justify-end">
