@@ -7,7 +7,6 @@ import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 const DAY_NAMES   = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado']
 const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
 
-
 const NEXT_ACTION_LABEL = {
   msg1:        name => `Enviar MSG2 a ${name}`,
   msg2:        name => `Enviar MSG3 a ${name}`,
@@ -63,21 +62,113 @@ const fireUrgentNotification = (count, onNavigate) => {
   }
 }
 
+function MrrLineChart({ data }) {
+  if (!data || data.length < 2) {
+    return (
+      <div className="h-12 flex items-center justify-center">
+        <span className="text-[10px] text-[#444]">Acumulando datos...</span>
+      </div>
+    )
+  }
+
+  const sorted = [...data].sort((a, b) => a.month.localeCompare(b.month))
+  const amounts = sorted.map(s => Number(s.amount))
+  const maxVal = Math.max(...amounts, 1)
+  const minVal = Math.min(...amounts, 0)
+  const range = maxVal - minVal || 1
+
+  const W = 200, H = 48, padX = 6, padY = 6
+  const innerW = W - padX * 2
+  const innerH = H - padY * 2
+
+  const points = sorted.map((s, i) => ({
+    x: padX + (sorted.length > 1 ? (i / (sorted.length - 1)) * innerW : innerW / 2),
+    y: H - padY - ((Number(s.amount) - minVal) / range) * innerH,
+  }))
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
+  const areaPath = `${linePath} L ${points[points.length - 1].x.toFixed(1)} ${H} L ${points[0].x.toFixed(1)} ${H} Z`
+
+  return (
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="overflow-visible">
+      <defs>
+        <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#E8410A" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#E8410A" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#mrrGrad)" />
+      <path d={linePath} fill="none" stroke="#E8410A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => (
+        <circle
+          key={i}
+          cx={p.x.toFixed(1)}
+          cy={p.y.toFixed(1)}
+          r={i === points.length - 1 ? 3 : 2}
+          fill="#E8410A"
+          fillOpacity={i === points.length - 1 ? 1 : 0.5}
+        />
+      ))}
+    </svg>
+  )
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [prospects, setProspects] = useState([])
-  const [clients, setClients]     = useState([])
-  const [loading, setLoading]     = useState(true)
+  const [prospects, setProspects]   = useState([])
+  const [clients, setClients]       = useState([])
+  const [loading, setLoading]       = useState(true)
+  const [mrrHistory, setMrrHistory] = useState([])
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('prospects').select('*'),
-      supabase.from('clients').select('*').order('created_at', { ascending: false }),
-    ]).then(([{ data: p }, { data: c }]) => {
-      setProspects(p || [])
-      setClients(c || [])
+    async function load() {
+      const [{ data: p }, { data: c }] = await Promise.all([
+        supabase.from('prospects').select('*'),
+        supabase.from('clients').select('*').order('created_at', { ascending: false }),
+      ])
+      const prosp = p || []
+      const cli   = c || []
+      setProspects(prosp)
+      setClients(cli)
+
+      const now = new Date()
+      now.setDate(1)
+      const monthKey = now.toISOString().split('T')[0]
+
+      const { data: snaps } = await supabase
+        .from('mrr_snapshots')
+        .select('*')
+        .order('month', { ascending: false })
+        .limit(6)
+
+      const hasCurrentMonth = snaps?.some(s => (s.month || '').slice(0, 7) === monthKey.slice(0, 7))
+
+      if (!hasCurrentMonth) {
+        const currentMrr = cli
+          .filter(cl => cl.status !== 'pagado')
+          .reduce((sum, cl) => sum + (cl.pack === 'otro' ? (Number(cl.custom_price) || 0) : (PACK_PRICES[cl.pack] || 0)), 0)
+        const currentClientsCount = cli.filter(cl => cl.status !== 'pagado').length
+
+        await supabase.from('mrr_snapshots').insert({
+          user_id: 'fer',
+          month: monthKey,
+          amount: currentMrr,
+          clients_count: currentClientsCount,
+        })
+
+        const { data: updatedSnaps } = await supabase
+          .from('mrr_snapshots')
+          .select('*')
+          .order('month', { ascending: false })
+          .limit(6)
+        setMrrHistory(updatedSnaps || [])
+      } else {
+        setMrrHistory(snaps || [])
+      }
+
       setLoading(false)
-    })
+    }
+    load()
   }, [])
 
   useEffect(() => {
@@ -109,27 +200,18 @@ export default function Dashboard() {
       return db - da
     })
 
-  const urgentFollowUps    = pendingFollowUps.filter(p => {
-    const d = daysSince(getLastContactDate(p))
-    return d !== null && d > 7
-  })
-  const nonUrgentFollowUps = pendingFollowUps.filter(p => {
-    const d = daysSince(getLastContactDate(p))
-    return d === null || d <= 7
-  })
-  const urgentCount   = urgentFollowUps.length
-  const slotsLeft     = Math.max(MAX_VISIBLE - urgentCount, 0)
-  const fillerItems   = nonUrgentFollowUps.slice(0, slotsLeft)
-  const fillerCount   = fillerItems.length
-  const visibleFollowUps = [...urgentFollowUps.slice(0, MAX_VISIBLE), ...fillerItems]
-  const hiddenCount      = Math.max(urgentCount - MAX_VISIBLE, 0)
+  const urgentFollowUps    = pendingFollowUps.filter(p => { const d = daysSince(getLastContactDate(p)); return d !== null && d > 7 })
+  const nonUrgentFollowUps = pendingFollowUps.filter(p => { const d = daysSince(getLastContactDate(p)); return d === null || d <= 7 })
+  const urgentCount        = urgentFollowUps.length
+  const slotsLeft          = Math.max(MAX_VISIBLE - urgentCount, 0)
+  const fillerItems        = nonUrgentFollowUps.slice(0, slotsLeft)
+  const fillerCount        = fillerItems.length
+  const visibleFollowUps   = [...urgentFollowUps.slice(0, MAX_VISIBLE), ...fillerItems]
+  const hiddenCount        = Math.max(urgentCount - MAX_VISIBLE, 0)
 
   const pipeline = PROSPECT_COLUMNS
     .filter(col => FOLLOW_UP_STATUSES.includes(col.id))
-    .map(col => ({
-      ...col,
-      count: prospects.filter(p => p.status === col.id).length,
-    }))
+    .map(col => ({ ...col, count: prospects.filter(p => p.status === col.id).length }))
 
   const recentClients = clients
     .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
@@ -145,64 +227,64 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="flex flex-col px-7 py-5 gap-3 max-w-5xl mx-auto w-full">
+    <div className="flex flex-col px-4 py-4 gap-4 max-w-5xl mx-auto w-full">
 
-      {/* ── ZONA 1: Header ── */}
+      {/* Header */}
       <div className="shrink-0">
         <h1 className="text-2xl text-white font-gilroy tracking-tight">{getGreeting()}, Fer</h1>
-        <p className="text-xs text-[#666] mt-0.5 capitalize">{dateStr}</p>
+        <p className="text-[11px] text-[#555] mt-0.5 capitalize">{dateStr}</p>
       </div>
 
-      {/* ── ZONA 2: KPIs ── */}
-      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* KPIs — igual altura con items-stretch */}
+      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
 
         <Link to="/clientes"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
+          className="bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4 hover:border-[#333] transition-colors flex flex-col"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">MRR actual</p>
-          <p className="text-3xl font-black text-white tracking-tight">${mrr.toLocaleString()}</p>
-          <p className="text-xs text-[#666] mt-1">{mrrProgress.toFixed(0)}% de ${MRR_GOAL.toLocaleString()}</p>
+          <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-2">MRR actual</p>
+          <p className="text-[22px] font-bold text-white tracking-tight">${mrr.toLocaleString()}</p>
+          <p className="text-[11px] text-[#555] mt-1">{mrrProgress.toFixed(0)}% de ${MRR_GOAL.toLocaleString()}</p>
         </Link>
 
         <Link to="/clientes"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
+          className="bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4 hover:border-[#333] transition-colors flex flex-col"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Clientes activos</p>
-          <p className="text-3xl font-black text-white tracking-tight">{activeClients}</p>
-          <p className="text-xs text-[#1D9E75] mt-1">En progreso</p>
+          <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-2">Clientes activos</p>
+          <p className="text-[22px] font-bold text-white tracking-tight">{activeClients}</p>
+          <p className="text-[11px] text-[#1D9E75] mt-1">En progreso</p>
         </Link>
 
         <Link to="/prospectos"
-          className="bg-[#161616] rounded-2xl border border-[#2a2a2a] px-5 py-4 hover:border-[#333] transition-colors"
+          className="bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4 hover:border-[#333] transition-colors flex flex-col"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Prospectos activos</p>
-          <p className="text-3xl font-black text-white tracking-tight">{activeProspects}</p>
-          <p className="text-xs text-[#666] mt-1">Sin cerrar</p>
+          <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-2">Prospectos activos</p>
+          <p className="text-[22px] font-bold text-white tracking-tight">{activeProspects}</p>
+          <p className="text-[11px] text-[#555] mt-1">Sin cerrar</p>
         </Link>
 
         <Link to="/prospectos"
-          className="bg-[#1a0b08] rounded-2xl border border-[#E8410A44] px-5 py-4 hover:border-[#E8410A]/40 transition-colors"
+          className="bg-[#1a0b08] rounded-[10px] border border-[#E8410A44] p-4 hover:border-[#E8410A]/40 transition-colors flex flex-col"
         >
-          <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-1.5">Urgentes</p>
-          <p className={`text-3xl font-black tracking-tight ${urgentCount > 0 ? 'text-[#E8410A]' : 'text-white'}`}>
+          <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-2">Urgentes</p>
+          <p className={`text-[22px] font-bold tracking-tight ${urgentCount > 0 ? 'text-[#E8410A]' : 'text-white'}`}>
             {urgentCount}
           </p>
-          <p className="text-xs text-[#666] mt-1">+7 días sin contacto</p>
+          <p className="text-[11px] text-[#555] mt-1">+7 días sin contacto</p>
         </Link>
 
       </div>
 
-      {/* ── ZONA 3+4: Dos columnas ── */}
+      {/* Dos columnas */}
       <div className="flex gap-4 items-stretch">
 
-        {/* Columna izquierda — Acción de hoy (60%) */}
+        {/* Izquierda — Acción de hoy (60%) */}
         <div className="w-3/5 flex flex-col">
-          <div className="h-full bg-[#161616] rounded-2xl border border-[#2a2a2a] flex flex-col overflow-hidden">
+          <div className="h-full bg-[#161616] rounded-[10px] border border-[#2a2a2a] flex flex-col overflow-hidden">
 
-            <div className="shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-[#2a2a2a]">
+            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[#2a2a2a]">
               <div>
                 <h2 className="text-sm font-semibold text-white">Acción de hoy</h2>
-                <p className="text-xs text-[#666] mt-0.5">
+                <p className="text-[11px] text-[#555] mt-0.5">
                   {urgentCount === 0 && fillerCount === 0
                     ? 'Todo al día'
                     : [
@@ -212,7 +294,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <Link to="/prospectos"
-                className="text-xs text-[#666] hover:text-white flex items-center gap-1 transition-colors"
+                className="text-[11px] text-[#555] hover:text-white flex items-center gap-1 transition-colors"
               >
                 Ver todos <ArrowRight size={11} />
               </Link>
@@ -222,7 +304,7 @@ export default function Dashboard() {
               <div className="py-12 flex flex-col items-center justify-center gap-3">
                 <CheckCircle2 size={28} className="text-[#1D9E75]" />
                 <p className="text-sm font-semibold text-white">Todo al día</p>
-                <p className="text-xs text-[#666]">No hay prospectos pendientes</p>
+                <p className="text-[11px] text-[#555]">No hay prospectos pendientes</p>
               </div>
             ) : (
               <div className="flex flex-col">
@@ -234,7 +316,7 @@ export default function Dashboard() {
                     <Link
                       key={p.id}
                       to={`/prospectos?id=${p.id}`}
-                      className="shrink-0 py-3 flex items-center justify-between px-5 hover:bg-[#1c1c1c] transition-colors group"
+                      className="shrink-0 py-3 flex items-center justify-between px-4 hover:bg-[#1c1c1c] transition-colors group"
                       style={{ borderBottom: '0.5px solid #222' }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -243,7 +325,7 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-white truncate leading-tight">{p.name}</p>
-                          <p className="text-xs text-[#E8410A] truncate leading-tight font-medium mt-0.5">
+                          <p className="text-[11px] text-[#E8410A] truncate leading-tight font-medium mt-0.5">
                             {getNextAction(p)}
                           </p>
                         </div>
@@ -252,7 +334,7 @@ export default function Dashboard() {
                         {days !== null && (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md min-w-[34px] text-center ${
                             isCritical ? 'bg-red-950 text-red-400'
-                            : isUrgent ? 'bg-[#2a1810] text-[#E8410A]'
+                            : isUrgent  ? 'bg-[#2a1810] text-[#E8410A]'
                             : 'bg-[#111] text-[#555]'
                           }`}>
                             {days}d
@@ -266,7 +348,7 @@ export default function Dashboard() {
                 {hiddenCount > 0 && (
                   <Link
                     to="/prospectos"
-                    className="shrink-0 flex items-center gap-1.5 px-5 py-3 text-xs text-[#666] hover:text-white transition-colors mt-auto border-t border-[#222]"
+                    className="shrink-0 flex items-center gap-1.5 px-4 py-3 text-[11px] text-[#555] hover:text-white transition-colors border-t border-[#222]"
                   >
                     <ArrowRight size={11} />
                     Ver {hiddenCount} prospecto{hiddenCount !== 1 ? 's' : ''} más
@@ -278,22 +360,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Columna derecha — Métricas secundarias (40%) */}
-        <div className="w-2/5 flex flex-col gap-3">
+        {/* Derecha — Métricas (40%) */}
+        <div className="w-2/5 flex flex-col gap-4">
 
           {/* Pipeline */}
-          <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-5 flex flex-col">
-            <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-3 shrink-0">Pipeline</p>
-            <div className="flex flex-col gap-3.5">
+          <div className="bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4 flex flex-col">
+            <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-3 shrink-0">Pipeline</p>
+            <div className="flex flex-col gap-3">
               {pipeline.map(col => {
                 const pct = activeProspects > 0 ? (col.count / activeProspects) * 100 : 0
                 return (
-                  <div key={col.id} className="py-1.5">
+                  <div key={col.id}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[12px] text-[#666]">{col.label}</span>
-                      <span className="text-[13px] font-semibold text-[#ccc]">{col.count}</span>
+                      <span className="text-[11px] text-[#555]">{col.label}</span>
+                      <span className="text-[11px] font-bold text-white">{col.count}</span>
                     </div>
-                    <div className="w-full h-[5px] bg-[#222] rounded-full overflow-hidden">
+                    <div className="w-full h-[4px] bg-[#222] rounded-full overflow-hidden">
                       <div
                         className="h-full bg-[#E8410A]/50 rounded-full transition-all duration-500"
                         style={{ width: `${pct}%` }}
@@ -305,37 +387,36 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Meta MRR */}
-          <div className="shrink-0 bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4">
-            <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest mb-3">Meta MRR</p>
+          {/* Meta MRR + gráfico histórico */}
+          <div className="shrink-0 bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4">
+            <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest mb-3">Meta MRR</p>
             <div className="flex items-end justify-between mb-2">
-              <span className="text-xl font-black text-white">${mrr.toLocaleString()}</span>
-              <span className="text-xs font-bold text-[#444]">${MRR_GOAL.toLocaleString()}</span>
+              <span className="text-[22px] font-bold text-white">${mrr.toLocaleString()}</span>
+              <span className="text-[11px] font-bold text-[#444]">${MRR_GOAL.toLocaleString()}</span>
             </div>
-            <div className="w-full h-1.5 bg-[#222] rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-[#222] rounded-full overflow-hidden mb-3">
               <div
                 className="h-full bg-[#E8410A] rounded-full transition-all duration-700"
                 style={{ width: `${mrrProgress}%` }}
               />
             </div>
-            <p className={`text-xs mt-2 ${clientsNeeded > 0 ? 'text-[#666]' : 'text-[#1D9E75]'}`}>
-              {clientsNeeded > 0
-                ? `Faltan ~${clientsNeeded} pack 4-3-3`
-                : '¡Meta superada!'}
+            <MrrLineChart data={mrrHistory} />
+            <p className={`text-[11px] mt-2 ${clientsNeeded > 0 ? 'text-[#555]' : 'text-[#1D9E75]'}`}>
+              {clientsNeeded > 0 ? `Faltan ~${clientsNeeded} pack 4-3-3` : '¡Meta superada!'}
             </p>
           </div>
 
           {/* Clientes recientes */}
-          <div className="bg-[#161616] rounded-2xl border border-[#2a2a2a] p-4 flex flex-col overflow-hidden">
+          <div className="bg-[#161616] rounded-[10px] border border-[#2a2a2a] p-4 flex flex-col">
             <div className="shrink-0 flex items-center justify-between mb-3">
-              <p className="text-[11px] font-semibold text-[#666] uppercase tracking-widest">Clientes recientes</p>
-              <Link to="/clientes" className="text-[11px] text-[#666] hover:text-white transition-colors">
+              <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest">Clientes recientes</p>
+              <Link to="/clientes" className="text-[11px] text-[#555] hover:text-white transition-colors">
                 Ver todos
               </Link>
             </div>
             {recentClients.length === 0 ? (
-              <div className="py-6 flex items-center justify-center">
-                <p className="text-xs text-[#444]">Sin clientes aún</p>
+              <div className="py-4 flex items-center justify-center">
+                <p className="text-[11px] text-[#444]">Sin clientes aún</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -345,8 +426,8 @@ export default function Dashboard() {
                       {c.name?.[0]?.toUpperCase() || '?'}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">{c.name}</p>
-                      <p className="text-[10px] text-[#666] truncate">
+                      <p className="text-[11px] font-semibold text-white truncate">{c.name}</p>
+                      <p className="text-[10px] text-[#555] truncate">
                         {c.pack === 'otro'
                           ? (c.custom_price ? `$${Number(c.custom_price).toLocaleString()}/mes` : '—')
                           : (c.pack || '—')}
