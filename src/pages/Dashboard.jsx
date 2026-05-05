@@ -217,6 +217,18 @@ export default function Dashboard() {
     .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
     .slice(0, 3)
 
+  const todayLocal = (() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  })()
+
+  const todayFollowups = prospects.filter(p =>
+    p.followup_date &&
+    p.followup_date <= todayLocal &&
+    p.status !== 'cerrado' &&
+    p.status !== 'convertido'
+  )
+
   const now = new Date()
   const dateStr = `${DAY_NAMES[now.getDay()]} ${now.getDate()} de ${MONTH_NAMES[now.getMonth()]} · ${now.getFullYear()}`
 
@@ -273,6 +285,40 @@ export default function Dashboard() {
         </Link>
 
       </div>
+
+      {/* Seguimientos programados hoy */}
+      {todayFollowups.length > 0 && (
+        <div className="shrink-0 bg-[#161616] rounded-[10px] border border-red-900/40 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2a2a2a]">
+            <p className="text-[10px] font-semibold text-[#666] uppercase tracking-widest">Seguimientos programados hoy</p>
+            <span className="text-[11px] font-bold text-red-400 bg-red-950 px-1.5 py-0.5 rounded-md">{todayFollowups.length}</span>
+          </div>
+          <div className="flex flex-col">
+            {todayFollowups.map((p, idx) => (
+              <Link
+                key={p.id}
+                to={`/prospectos?id=${p.id}`}
+                className="flex items-center justify-between px-4 py-2.5 hover:bg-[#1c1c1c] transition-colors group"
+                style={{ borderTop: idx > 0 ? '0.5px solid #222' : 'none' }}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-6 h-6 rounded-full bg-[#1a0505] border border-red-900/40 flex items-center justify-center text-red-400 text-[10px] font-bold shrink-0">
+                    {p.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <p className="text-sm font-semibold text-white truncate">{p.name}</p>
+                  {p.club && <p className="text-[11px] text-[#555] truncate hidden sm:block">{p.club}</p>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-3">
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-950 text-red-400 whitespace-nowrap">
+                    SEGUIMIENTO HOY
+                  </span>
+                  <ArrowRight size={11} className="text-[#333] group-hover:text-[#E8410A] transition-colors" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Dos columnas */}
       <div className="flex gap-4 items-stretch">

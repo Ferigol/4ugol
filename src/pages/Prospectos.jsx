@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { PROSPECT_COLUMNS } from '../lib/constants'
+import { PROSPECT_COLUMNS, PACKS } from '../lib/constants'
 import { messages } from '../lib/messages'
 import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge } from '../components/Badge'
-import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X, LayoutGrid, List, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X, LayoutGrid, List, ChevronRight, ChevronUp, ChevronDown, UserCheck } from 'lucide-react'
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha' }
@@ -39,10 +39,34 @@ const INP = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#
 const SEL = 'w-full px-3 py-2.5 text-sm rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] text-white focus:outline-none focus:border-[#E8410A] cursor-pointer transition-all'
 const LBL = 'block text-xs font-medium text-[#666] mb-1.5'
 
+const daysUntilFollowup = (dateStr) => {
+  if (!dateStr) return null
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const target = new Date(dateStr + 'T00:00:00')
+  return Math.round((target - today) / 86400000)
+}
+
+const FollowupBadge = ({ dateStr }) => {
+  const d = daysUntilFollowup(dateStr)
+  if (d === null) return null
+  if (d <= 0) return (
+    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-950 text-red-400 whitespace-nowrap">
+      SEGUIMIENTO HOY
+    </span>
+  )
+  if (d <= 2) return (
+    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-950 text-amber-400 whitespace-nowrap">
+      Seguimiento en {d}d
+    </span>
+  )
+  return null
+}
+
 const defaultForm = {
   name: '', club: '', email: '', phone: '', web_link: '', role: '', lang: 'es', status: 'nuevo', notes: '',
   msg1_texto: '', msg2_texto: '', msg3_texto: '',
   msg1_fecha: '', msg2_fecha: '', msg3_fecha: '',
+  followup_date: '',
 }
 
 const SectionHeader = ({ label }) => (
@@ -80,7 +104,7 @@ const DaysBadge = ({ days }) => {
   return <span className="inline-flex px-1.5 py-0.5 rounded-md text-xs font-semibold bg-[#1a1a1a] text-[#555]">{days}d</span>
 }
 
-const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 60px 28px'
+const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 110px 60px 28px'
 
 export default function Prospectos() {
   const navigate = useNavigate()
@@ -106,6 +130,12 @@ export default function Prospectos() {
   const [contactingId, setContactingId] = useState(null)
   const [contactedId, setContactedId]   = useState(null)
 
+  const [modalConvertir, setModalConvertir] = useState(null)
+  const [convertForm, setConvertForm]       = useState({ pack: '4-3-3', custom_price: '', start_date: '' })
+  const [converting, setConverting]         = useState(false)
+  const [convertError, setConvertError]     = useState('')
+  const [convertSuccess, setConvertSuccess] = useState(false)
+
   useEffect(() => {
     const targetId = searchParams.get('id')
     if (!targetId || items.length === 0) return
@@ -127,9 +157,10 @@ export default function Prospectos() {
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
+  const baseItems = items.filter(i => i.status !== 'convertido')
   const filteredItems = searchQuery.trim()
-    ? items.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
-    : items
+    ? baseItems.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : baseItems
 
   const urgentCount = useMemo(
     () => filteredItems.filter(i => { const d = daysSince(getLastContactDate(i)); return d !== null && d > 7 }).length,
@@ -137,6 +168,22 @@ export default function Prospectos() {
   )
 
   const listItems = useMemo(() => {
+    if (activeFilter === 'convertido') {
+      const pool = searchQuery.trim()
+        ? items.filter(i => i.status === 'convertido' && i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+        : items.filter(i => i.status === 'convertido')
+      return pool.sort((a, b) => {
+        let va, vb
+        if (sortField === 'name')   { va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase() }
+        if (sortField === 'status') { va = 0; vb = 0 }
+        if (sortField === 'days')   { va = daysSince(getLastContactDate(a)) ?? -1; vb = daysSince(getLastContactDate(b)) ?? -1 }
+        if (sortField === 'date')   { va = getLastContactDate(a) || ''; vb = getLastContactDate(b) || '' }
+        if (va < vb) return sortDir === 'asc' ? -1 : 1
+        if (va > vb) return sortDir === 'asc' ?  1 : -1
+        return 0
+      })
+    }
+
     let base = [...filteredItems]
     switch (activeFilter) {
       case 'urgent': base = base.filter(i => { const d = daysSince(getLastContactDate(i)); return d !== null && d > 7 }); break
@@ -156,7 +203,7 @@ export default function Prospectos() {
       return 0
     })
     return base
-  }, [filteredItems, activeFilter, sortField, sortDir])
+  }, [items, filteredItems, activeFilter, sortField, sortDir, searchQuery])
 
   const fetchData = useCallback(async () => {
     const { data } = await supabase.from('prospects').select('*').order('created_at', { ascending: false })
@@ -190,6 +237,7 @@ export default function Prospectos() {
       lang: item.lang || 'es', status: item.status, notes: item.notes || '',
       msg1_texto: item.msg1_texto || '', msg2_texto: item.msg2_texto || '', msg3_texto: item.msg3_texto || '',
       msg1_fecha: item.msg1_fecha || '', msg2_fecha: item.msg2_fecha || '', msg3_fecha: item.msg3_fecha || '',
+      followup_date: item.followup_date || '',
     })
     setSaveError('')
     setEditingId(item.id)
@@ -207,6 +255,7 @@ export default function Prospectos() {
         msg1_fecha: form.msg1_fecha || null,
         msg2_fecha: form.msg2_fecha || null,
         msg3_fecha: form.msg3_fecha || null,
+        followup_date: form.followup_date || null,
       }
 
       const stripMissingCol = (p, err) => {
@@ -287,6 +336,58 @@ export default function Prospectos() {
     setContactingId(null)
     setContactedId(item.id)
     setTimeout(() => setContactedId(prev => prev === item.id ? null : prev), 1800)
+  }
+
+  const openConvertir = (item) => {
+    setModalConvertir(item)
+    setConvertForm({ pack: '4-3-3', custom_price: '', start_date: '' })
+    setConvertError('')
+    setConvertSuccess(false)
+  }
+
+  const handleConvert = async () => {
+    setConverting(true)
+    setConvertError('')
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const p = modalConvertir
+
+      const clientPayload = {
+        user_id:      user.id,
+        name:         p.name,
+        club:         p.club          || '',
+        email:        p.email         || '',
+        telefono:     p.phone         || '',
+        puesto:       p.role          || '',
+        lang:         p.lang          || 'es',
+        pack:         convertForm.pack,
+        custom_price: convertForm.pack === 'otro' ? (Number(convertForm.custom_price) || null) : null,
+        payment_type: 'mensual',
+        start_date:   convertForm.start_date || null,
+        end_date:     null,
+        status:       'brief',
+        notes:        p.notes         || '',
+        project_name: '',
+      }
+
+      const { error: clientErr } = await supabase.from('clients').insert(clientPayload)
+      if (clientErr) throw clientErr
+
+      const { error: prospectErr } = await supabase
+        .from('prospects').update({ status: 'convertido' }).eq('id', p.id)
+      if (prospectErr) throw prospectErr
+
+      setItems(prev => prev.map(i => i.id === p.id ? { ...i, status: 'convertido' } : i))
+      setConvertSuccess(true)
+      setTimeout(() => {
+        setConvertSuccess(false)
+        setModalConvertir(null)
+      }, 1800)
+    } catch (err) {
+      setConvertError(err.message || 'Error al convertir. Intenta de nuevo.')
+    } finally {
+      setConverting(false)
+    }
   }
 
   const openMsg = (item) => { setModalMsg(item); setMsgLang(item.lang || 'es'); setCopied(false) }
@@ -402,18 +503,21 @@ export default function Prospectos() {
                 <div className="mb-2">
                   <div className="flex items-center justify-between gap-1.5 flex-wrap mb-0.5">
                     <LangBadge lang={item.lang} />
-                    {(() => {
-                      const days = daysSince(getLastContactDate(item))
-                      if (days === null || days <= 7) return null
-                      const isCritical = days > 14
-                      return (
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-                          isCritical ? 'bg-red-950 text-red-400' : 'bg-amber-950 text-amber-400'
-                        }`}>
-                          {days}d sin contacto
-                        </span>
-                      )
-                    })()}
+                    <div className="flex items-center gap-1 flex-wrap justify-end">
+                      <FollowupBadge dateStr={item.followup_date} />
+                      {(() => {
+                        const days = daysSince(getLastContactDate(item))
+                        if (days === null || days <= 7) return null
+                        const isCritical = days > 14
+                        return (
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                            isCritical ? 'bg-red-950 text-red-400' : 'bg-amber-950 text-amber-400'
+                          }`}>
+                            {days}d sin contacto
+                          </span>
+                        )
+                      })()}
+                    </div>
                   </div>
                   <p className="text-sm font-bold text-white leading-tight mt-1">{item.name}</p>
                   {item.club && <p className="text-xs text-[#555] mt-0.5">{item.club}</p>}
@@ -468,6 +572,7 @@ export default function Prospectos() {
               { id: 'msg3',        label: 'MSG3' },
               { id: 'diagnostico', label: 'Diagnóstico' },
               { id: 'propuesta',   label: 'Propuesta' },
+              { id: 'convertido',  label: 'Convertidos' },
             ].map(pill => (
               <button
                 key={pill.id}
@@ -497,7 +602,8 @@ export default function Prospectos() {
               <SortBtn field="status" label="Estado"       sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               <SortBtn field="days"   label="Sin contacto" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               <SortBtn field="date"   label="Último msg"   sortField={sortField} sortDir={sortDir} onSort={handleSort} />
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Hoy</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Seguimiento</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Acción</span>
               <div />
             </div>
 
@@ -536,8 +642,32 @@ export default function Prospectos() {
                     {lastDate ? formatMsgDate(lastDate) : <span className="text-[#333]">—</span>}
                   </div>
 
+                  <div>
+                    {(() => {
+                      if (!item.followup_date) return <span className="text-xs text-[#333]">—</span>
+                      const d = daysUntilFollowup(item.followup_date)
+                      if (d !== null && d <= 0)
+                        return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-950 text-red-400 whitespace-nowrap">HOY</span>
+                      if (d !== null && d <= 2)
+                        return <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-950 text-amber-400 whitespace-nowrap">en {d}d</span>
+                      return <span className="text-xs text-[#555]">{formatMsgDate(item.followup_date)}</span>
+                    })()}
+                  </div>
+
                   <div className="flex items-center">
-                    {CONTACT_DATE_FIELD[item.status] ? (
+                    {item.status === 'cerrado' ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openConvertir(item) }}
+                        className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer bg-[#0f2a1f] text-[#1D9E75] border border-[#1D9E75]/30 hover:border-[#1D9E75]/60"
+                      >
+                        <UserCheck size={11} />
+                        Cliente
+                      </button>
+                    ) : item.status === 'convertido' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold bg-[#0e1f3a] text-[#3B82F6]">
+                        ✓
+                      </span>
+                    ) : CONTACT_DATE_FIELD[item.status] ? (
                       <button
                         onClick={(e) => handleContactedToday(e, item)}
                         disabled={!!contactingId}
@@ -618,11 +748,22 @@ export default function Prospectos() {
 
           <SectionHeader label="Seguimiento LinkedIn" />
 
-          <div>
-            <label className={LBL}>Estado</label>
-            <select className={SEL} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
-              {PROSPECT_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-            </select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LBL}>Estado</label>
+              <select className={SEL} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
+                {PROSPECT_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={LBL}>Próximo seguimiento</label>
+              <input
+                type="date"
+                className={INP}
+                value={form.followup_date || ''}
+                onChange={e => setForm(f => ({ ...f, followup_date: e.target.value }))}
+              />
+            </div>
           </div>
 
           {[
@@ -678,7 +819,114 @@ export default function Prospectos() {
               {saving ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear prospecto'}
             </button>
           </div>
+
+          {editingId && form.status === 'cerrado' && (
+            <div className="pt-2 border-t border-[#222]">
+              <button
+                onClick={() => {
+                  const prospect = items.find(i => i.id === editingId)
+                  setModalForm(false)
+                  openConvertir(prospect)
+                }}
+                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#0f2a1f] border border-[#1D9E75]/30 text-[#1D9E75] text-sm font-semibold hover:bg-[#152e22] hover:border-[#1D9E75]/60 transition-all cursor-pointer"
+              >
+                <UserCheck size={15} />
+                Convertir a cliente
+              </button>
+            </div>
+          )}
         </div>
+      </Modal>
+
+      {/* Modal: Convertir a cliente */}
+      <Modal isOpen={!!modalConvertir} onClose={() => { if (!converting) setModalConvertir(null) }} title="Convertir a cliente">
+        {modalConvertir && (
+          <div className="space-y-4">
+            {convertSuccess ? (
+              <div className="py-8 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-[#0f2a1f] border border-[#1D9E75]/30 flex items-center justify-center">
+                  <UserCheck size={26} className="text-[#1D9E75]" />
+                </div>
+                <p className="text-base font-semibold text-white">¡Cliente creado!</p>
+                <p className="text-sm text-[#555] text-center">
+                  {modalConvertir.name} ya está en el kanban de clientes en estado <span className="text-[#3B82F6]">Brief</span>.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="bg-[#111] border border-[#222] rounded-xl p-3 space-y-1">
+                  <p className="text-sm font-semibold text-white">{modalConvertir.name}</p>
+                  {modalConvertir.club && <p className="text-xs text-[#555]">{modalConvertir.club}</p>}
+                  <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1">
+                    {modalConvertir.email && <p className="text-xs text-[#444]">{modalConvertir.email}</p>}
+                    {modalConvertir.phone && <p className="text-xs text-[#444]">{modalConvertir.phone}</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <label className={LBL}>Pack *</label>
+                  <select
+                    className={SEL}
+                    value={convertForm.pack}
+                    onChange={e => setConvertForm(f => ({ ...f, pack: e.target.value, custom_price: '' }))}
+                  >
+                    {PACKS.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.id === 'otro' ? 'Otro — precio personalizado' : `${p.label} — $${p.price}/mes`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {convertForm.pack === 'otro' && (
+                  <div>
+                    <label className={LBL}>Precio mensual ($)</label>
+                    <input
+                      type="number" min="0"
+                      className={INP}
+                      value={convertForm.custom_price}
+                      onChange={e => setConvertForm(f => ({ ...f, custom_price: e.target.value }))}
+                      placeholder="Ej. 1500"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className={LBL}>Fecha de inicio</label>
+                  <input
+                    type="date"
+                    className={INP}
+                    value={convertForm.start_date}
+                    onChange={e => setConvertForm(f => ({ ...f, start_date: e.target.value }))}
+                  />
+                </div>
+
+                {convertError && (
+                  <div className="px-3 py-2.5 rounded-xl bg-red-950/50 border border-red-800/50 text-xs text-red-400">
+                    {convertError}
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-1">
+                  <button
+                    onClick={() => setModalConvertir(null)}
+                    disabled={converting}
+                    className="flex-1 py-2.5 rounded-xl border border-[#2a2a2a] text-sm font-medium text-[#666] hover:bg-[#1a1a1a] hover:text-white transition-colors cursor-pointer disabled:opacity-40"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleConvert}
+                    disabled={converting || (convertForm.pack === 'otro' && !convertForm.custom_price)}
+                    className="flex-1 py-2.5 rounded-xl bg-[#1D9E75] hover:bg-[#178a65] text-white text-sm font-semibold transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    {converting ? 'Creando...' : 'Confirmar y crear cliente'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </Modal>
 
       {/* LinkedIn Message Modal */}
