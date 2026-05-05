@@ -131,7 +131,7 @@ export default function Prospectos() {
         msg3_fecha: form.msg3_fecha || null,
       }
 
-      const withoutMissingCols = (p, err) => {
+      const stripMissingCol = (p, err) => {
         if (!err?.message?.includes("schema cache")) return null
         const match = err.message.match(/find the '(\w+)' column/)
         if (!match) return null
@@ -140,20 +140,28 @@ export default function Prospectos() {
       }
 
       if (editingId) {
-        let { error } = await supabase.from('prospects').update(payload).eq('id', editingId)
-        if (error) {
-          const fallback = withoutMissingCols(payload, error)
-          if (fallback) ({ error } = await supabase.from('prospects').update(fallback).eq('id', editingId))
+        let cur = payload
+        let error
+        for (let attempt = 0; attempt < 10; attempt++) {
+          ;({ error } = await supabase.from('prospects').update(cur).eq('id', editingId))
+          if (!error) break
+          const next = stripMissingCol(cur, error)
+          if (!next) break
+          cur = next
         }
         if (error) throw error
-        setItems(prev => prev.map(i => i.id === editingId ? { ...i, ...payload } : i))
+        setItems(prev => prev.map(i => i.id === editingId ? { ...i, ...cur } : i))
       } else {
         const dateField = MSG_DATE_FIELDS[payload.status]
         if (dateField && !payload[dateField]) payload[dateField] = todayDate()
-        let { data, error } = await supabase.from('prospects').insert(payload).select().single()
-        if (error) {
-          const fallback = withoutMissingCols(payload, error)
-          if (fallback) ({ data, error } = await supabase.from('prospects').insert(fallback).select().single())
+        let cur = payload
+        let data, error
+        for (let attempt = 0; attempt < 10; attempt++) {
+          ;({ data, error } = await supabase.from('prospects').insert(cur).select().single())
+          if (!error) break
+          const next = stripMissingCol(cur, error)
+          if (!next) break
+          cur = next
         }
         if (error) throw error
         setItems(prev => [data, ...prev])
