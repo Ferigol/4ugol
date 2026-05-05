@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { PROSPECT_COLUMNS } from '../lib/constants'
@@ -7,7 +7,7 @@ import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge } from '../components/Badge'
-import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X } from 'lucide-react'
+import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X, LayoutGrid, List, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react'
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha' }
@@ -48,6 +48,36 @@ const SectionHeader = ({ label }) => (
   </div>
 )
 
+const SortBtn = ({ field, label, sortField, sortDir, onSort }) => (
+  <button
+    onClick={() => onSort(field)}
+    className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-[#666] hover:text-[#999] transition-colors cursor-pointer select-none"
+  >
+    {label}
+    <span className="flex flex-col" style={{ gap: -2 }}>
+      <ChevronUp size={9} className={sortField === field && sortDir === 'asc' ? 'text-[#E8410A]' : 'text-[#333]'} />
+      <ChevronDown size={9} className={sortField === field && sortDir === 'desc' ? 'text-[#E8410A]' : 'text-[#333]'} />
+    </span>
+  </button>
+)
+
+const ProspectAvatar = ({ name }) => (
+  <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#2a2a2a] flex items-center justify-center shrink-0">
+    <span className="text-sm font-bold text-[#E8410A] leading-none">
+      {(name || '?').trim().charAt(0).toUpperCase()}
+    </span>
+  </div>
+)
+
+const DaysBadge = ({ days }) => {
+  if (days === null) return <span className="text-xs text-[#444]">—</span>
+  if (days > 14) return <span className="inline-flex px-1.5 py-0.5 rounded-md text-xs font-semibold bg-red-950 text-red-400">{days}d</span>
+  if (days > 7)  return <span className="inline-flex px-1.5 py-0.5 rounded-md text-xs font-semibold bg-amber-950 text-amber-400">{days}d</span>
+  return <span className="inline-flex px-1.5 py-0.5 rounded-md text-xs font-semibold bg-[#1a1a1a] text-[#555]">{days}d</span>
+}
+
+const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 28px'
+
 export default function Prospectos() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
@@ -64,6 +94,11 @@ export default function Prospectos() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchRef = useRef(null)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('prospectos-view') || 'kanban')
+  const [sortField, setSortField] = useState('name')
+  const [sortDir, setSortDir] = useState('asc')
+  const [activeFilter, setActiveFilter] = useState('all')
 
   useEffect(() => {
     const targetId = searchParams.get('id')
@@ -90,6 +125,33 @@ export default function Prospectos() {
     ? items.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : items
 
+  const urgentCount = useMemo(
+    () => filteredItems.filter(i => { const d = daysSince(getLastContactDate(i)); return d !== null && d > 7 }).length,
+    [filteredItems]
+  )
+
+  const listItems = useMemo(() => {
+    let base = [...filteredItems]
+    switch (activeFilter) {
+      case 'urgent': base = base.filter(i => { const d = daysSince(getLastContactDate(i)); return d !== null && d > 7 }); break
+      case 'es':     base = base.filter(i => i.lang === 'es'); break
+      case 'en':     base = base.filter(i => i.lang === 'en'); break
+      case 'all':    break
+      default:       base = base.filter(i => i.status === activeFilter)
+    }
+    base.sort((a, b) => {
+      let va, vb
+      if (sortField === 'name')   { va = (a.name || '').toLowerCase(); vb = (b.name || '').toLowerCase() }
+      if (sortField === 'status') { const o = PROSPECT_COLUMNS.map(c => c.id); va = o.indexOf(a.status); vb = o.indexOf(b.status) }
+      if (sortField === 'days')   { va = daysSince(getLastContactDate(a)) ?? -1; vb = daysSince(getLastContactDate(b)) ?? -1 }
+      if (sortField === 'date')   { va = getLastContactDate(a) || ''; vb = getLastContactDate(b) || '' }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1
+      if (va > vb) return sortDir === 'asc' ?  1 : -1
+      return 0
+    })
+    return base
+  }, [filteredItems, activeFilter, sortField, sortDir])
+
   const fetchData = useCallback(async () => {
     const { data } = await supabase.from('prospects').select('*').order('created_at', { ascending: false })
     setItems(data || [])
@@ -97,6 +159,16 @@ export default function Prospectos() {
   }, [])
 
   useEffect(() => { fetchData() }, [fetchData])
+
+  const handleSort = (field) => {
+    if (field === sortField) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortField(field); setSortDir('asc') }
+  }
+
+  const toggleView = (mode) => {
+    setViewMode(mode)
+    localStorage.setItem('prospectos-view', mode)
+  }
 
   const openAdd = (status = 'nuevo') => {
     setForm({ ...defaultForm, status })
@@ -227,8 +299,8 @@ export default function Prospectos() {
           <div>
             <h1 className="text-xl text-white tracking-tight font-gilroy">Prospectos</h1>
             <p className="text-xs text-[#444] mt-0.5">
-            {searchQuery.trim() ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? 's' : ''}` : `${items.length} total`}
-          </p>
+              {searchQuery.trim() ? `${filteredItems.length} resultado${filteredItems.length !== 1 ? 's' : ''}` : `${items.length} total`}
+            </p>
           </div>
         </div>
 
@@ -255,6 +327,25 @@ export default function Prospectos() {
               <Search size={16} />
             </button>
           )}
+
+          {/* View toggle */}
+          <div className="flex items-center rounded-xl border border-[#222] overflow-hidden">
+            <button
+              onClick={() => toggleView('kanban')}
+              title="Vista Kanban"
+              className={`p-2 transition-colors cursor-pointer ${viewMode === 'kanban' ? 'bg-[#1a1a1a] text-white' : 'text-[#444] hover:text-[#888]'}`}
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => toggleView('list')}
+              title="Vista Lista"
+              className={`p-2 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-[#1a1a1a] text-white' : 'text-[#444] hover:text-[#888]'}`}
+            >
+              <List size={16} />
+            </button>
+          </div>
+
           <button
             onClick={() => downloadProspectFichas(items)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#333] bg-transparent text-[#888] hover:text-white hover:border-[#555] text-sm font-medium transition-all cursor-pointer"
@@ -273,77 +364,177 @@ export default function Prospectos() {
         </div>
       </div>
 
-      <div className="w-full">
-        <KanbanBoard
-          columns={PROSPECT_COLUMNS}
-          items={filteredItems}
-          onItemsChange={handleItemsChange}
-          onStatusChange={handleStatusChange}
-          onAddToColumn={openAdd}
-          renderCard={(item) => (
-            <KanbanCard
-              key={item.id}
-              id={item.id}
-              onEdit={() => openEdit(item)}
-              onDelete={() => handleDelete(item.id)}
-            >
-              <div className="mb-2">
-                <div className="flex items-center justify-between gap-1.5 flex-wrap mb-0.5">
-                  <LangBadge lang={item.lang} />
+      {/* ── Kanban view ── */}
+      {viewMode === 'kanban' && (
+        <div className="w-full">
+          <KanbanBoard
+            columns={PROSPECT_COLUMNS}
+            items={filteredItems}
+            onItemsChange={handleItemsChange}
+            onStatusChange={handleStatusChange}
+            onAddToColumn={openAdd}
+            renderCard={(item) => (
+              <KanbanCard
+                key={item.id}
+                id={item.id}
+                onEdit={() => openEdit(item)}
+                onDelete={() => handleDelete(item.id)}
+              >
+                <div className="mb-2">
+                  <div className="flex items-center justify-between gap-1.5 flex-wrap mb-0.5">
+                    <LangBadge lang={item.lang} />
+                    {(() => {
+                      const days = daysSince(getLastContactDate(item))
+                      if (days === null || days <= 7) return null
+                      const isCritical = days > 14
+                      return (
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+                          isCritical ? 'bg-red-950 text-red-400' : 'bg-amber-950 text-amber-400'
+                        }`}>
+                          {days}d sin contacto
+                        </span>
+                      )
+                    })()}
+                  </div>
+                  <p className="text-sm font-bold text-white leading-tight mt-1">{item.name}</p>
+                  {item.club && <p className="text-xs text-[#555] mt-0.5">{item.club}</p>}
                   {(() => {
                     const days = daysSince(getLastContactDate(item))
-                    if (days === null || days <= 7) return null
-                    const isCritical = days > 14
+                    if (days === null || days > 7) return null
                     return (
-                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-                        isCritical ? 'bg-red-950 text-red-400' : 'bg-amber-950 text-amber-400'
-                      }`}>
-                        {days}d sin contacto
-                      </span>
+                      <p className="text-[10px] text-[#444] mt-0.5">hace {days} día{days !== 1 ? 's' : ''}</p>
                     )
                   })()}
+                  {(item.msg1_fecha || item.msg2_fecha || item.msg3_fecha) && (
+                    <div className="flex flex-col gap-0.5 mt-1.5">
+                      {item.msg1_fecha && <span className="text-[10px] text-[#444]">MSJ 1: {formatMsgDate(item.msg1_fecha)}</span>}
+                      {item.msg2_fecha && <span className="text-[10px] text-[#444]">MSJ 2: {formatMsgDate(item.msg2_fecha)}</span>}
+                      {item.msg3_fecha && <span className="text-[10px] text-[#444]">MSJ 3: {formatMsgDate(item.msg3_fecha)}</span>}
+                    </div>
+                  )}
                 </div>
-                <p className="text-sm font-bold text-white leading-tight mt-1">{item.name}</p>
-                {item.club && <p className="text-xs text-[#555] mt-0.5">{item.club}</p>}
-                {(() => {
-                  const days = daysSince(getLastContactDate(item))
-                  if (days === null || days > 7) return null
-                  return (
-                    <p className="text-[10px] text-[#444] mt-0.5">hace {days} día{days !== 1 ? 's' : ''}</p>
-                  )
-                })()}
-                {(item.msg1_fecha || item.msg2_fecha || item.msg3_fecha) && (
-                  <div className="flex flex-col gap-0.5 mt-1.5">
-                    {item.msg1_fecha && <span className="text-[10px] text-[#444]">MSJ 1: {formatMsgDate(item.msg1_fecha)}</span>}
-                    {item.msg2_fecha && <span className="text-[10px] text-[#444]">MSJ 2: {formatMsgDate(item.msg2_fecha)}</span>}
-                    {item.msg3_fecha && <span className="text-[10px] text-[#444]">MSJ 3: {formatMsgDate(item.msg3_fecha)}</span>}
-                  </div>
+
+                {item.notes && (
+                  <p className="text-xs text-[#444] line-clamp-2 mb-2 leading-relaxed">{item.notes}</p>
                 )}
+
+                {HAS_MSG_STATUSES.includes(item.status) && (
+                  <button
+                    onClick={() => openMsg(item)}
+                    className="flex items-center gap-1.5 text-xs text-[#1D9E75] hover:text-[#22c58a] font-medium mt-1 cursor-pointer transition-colors border border-[#1D9E75]/30 hover:border-[#1D9E75]/60 px-2 py-1 rounded-lg"
+                  >
+                    <MessageSquare size={11} />
+                    Ver mensaje
+                  </button>
+                )}
+              </KanbanCard>
+            )}
+          />
+        </div>
+      )}
+
+      {/* ── List view ── */}
+      {viewMode === 'list' && (
+        <div className="flex flex-col gap-3">
+
+          {/* Filter pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { id: 'all',         label: 'Todos' },
+              { id: 'urgent',      label: urgentCount > 0 ? `Urgentes (${urgentCount})` : 'Urgentes' },
+              { id: 'es',          label: 'ES' },
+              { id: 'en',          label: 'EN' },
+              { id: 'msg1',        label: 'MSG1' },
+              { id: 'msg2',        label: 'MSG2' },
+              { id: 'msg3',        label: 'MSG3' },
+              { id: 'diagnostico', label: 'Diagnóstico' },
+              { id: 'propuesta',   label: 'Propuesta' },
+            ].map(pill => (
+              <button
+                key={pill.id}
+                onClick={() => setActiveFilter(pill.id)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  activeFilter === pill.id
+                    ? 'bg-[#E8410A] text-white shadow-sm shadow-[#E8410A]/20'
+                    : 'bg-[#111] border border-[#222] text-[#666] hover:text-[#999] hover:border-[#333]'
+                }`}
+              >
+                {pill.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Table */}
+          <div className="rounded-2xl border border-[#1e1e1e] overflow-hidden">
+
+            {/* Header row */}
+            <div
+              className="grid gap-4 px-4 py-3 bg-[#0a0a0a] border-b border-[#222]"
+              style={{ gridTemplateColumns: COL_TEMPLATE }}
+            >
+              <div />
+              <SortBtn field="name"   label="Nombre"       sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Idioma</span>
+              <SortBtn field="status" label="Estado"       sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <SortBtn field="days"   label="Sin contacto" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <SortBtn field="date"   label="Último msg"   sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <div />
+            </div>
+
+            {/* Data rows */}
+            {listItems.length === 0 ? (
+              <div className="py-12 text-center text-sm text-[#333] bg-[#0f0f0f]">
+                Sin resultados para este filtro.
               </div>
-
-              {item.notes && (
-                <p className="text-xs text-[#444] line-clamp-2 mb-2 leading-relaxed">{item.notes}</p>
-              )}
-
-              {HAS_MSG_STATUSES.includes(item.status) && (
+            ) : listItems.map((item, idx) => {
+              const lastDate = getLastContactDate(item)
+              const days = daysSince(lastDate)
+              return (
                 <button
-                  onClick={() => openMsg(item)}
-                  className="flex items-center gap-1.5 text-xs text-[#1D9E75] hover:text-[#22c58a] font-medium mt-1 cursor-pointer transition-colors border border-[#1D9E75]/30 hover:border-[#1D9E75]/60 px-2 py-1 rounded-lg"
+                  key={item.id}
+                  onClick={() => openEdit(item)}
+                  className="grid gap-4 px-4 py-3 w-full text-left items-center bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors cursor-pointer group"
+                  style={{
+                    gridTemplateColumns: COL_TEMPLATE,
+                    borderTop: idx > 0 ? '0.5px solid #222' : 'none',
+                  }}
                 >
-                  <MessageSquare size={11} />
-                  Ver mensaje
+                  <ProspectAvatar name={item.name} />
+
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate leading-tight">{item.name}</p>
+                    {item.club && <p className="text-xs text-[#555] truncate mt-0.5">{item.club}</p>}
+                  </div>
+
+                  <div><LangBadge lang={item.lang} /></div>
+
+                  <div><Badge type="prospect" value={item.status} /></div>
+
+                  <div><DaysBadge days={days} /></div>
+
+                  <div className="text-xs text-[#555]">
+                    {lastDate ? formatMsgDate(lastDate) : <span className="text-[#333]">—</span>}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <ChevronRight size={14} className="text-[#333] group-hover:text-[#666] transition-colors" />
+                  </div>
                 </button>
-              )}
-            </KanbanCard>
-          )}
-        />
-      </div>
+              )
+            })}
+          </div>
+
+          <p className="text-xs text-[#444] px-1">
+            {listItems.length} prospecto{listItems.length !== 1 ? 's' : ''}
+            {activeFilter !== 'all' ? ' filtrados' : ''}
+          </p>
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalForm} onClose={() => setModalForm(false)} title={editingId ? 'Editar prospecto' : 'Nuevo prospecto'}>
         <div className="space-y-4">
 
-          {/* ── Sección 1: Datos del prospecto ── */}
           <SectionHeader label="Datos del prospecto" />
 
           <div className="grid grid-cols-2 gap-3">
@@ -387,7 +578,6 @@ export default function Prospectos() {
             <input type="url" className={INP} value={form.web_link} onChange={e => setForm(f => ({ ...f, web_link: e.target.value }))} placeholder="https://instagram.com/club" />
           </div>
 
-          {/* ── Sección 2: Seguimiento LinkedIn ── */}
           <SectionHeader label="Seguimiento LinkedIn" />
 
           <div>
@@ -426,7 +616,6 @@ export default function Prospectos() {
             </div>
           ))}
 
-          {/* ── Sección 3: Notas generales ── */}
           <SectionHeader label="Notas generales" />
 
           <div>
