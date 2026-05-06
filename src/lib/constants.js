@@ -51,6 +51,8 @@ export const PROSPECT_STATUS_COLORS = {
   diagnostico: { bg: 'bg-amber-950',    text: 'text-amber-400' },
   propuesta:   { bg: 'bg-[#2a1810]',   text: 'text-[#FF5A1F]' },
   cerrado:     { bg: 'bg-[#0f2a1f]',   text: 'text-[#1D9E75]' },
+  convertido:  { bg: 'bg-[#0e1f3a]',   text: 'text-[#3B82F6]' },
+  archivado:   { bg: 'bg-[#1a1a1a]',   text: 'text-[#555]' },
 }
 
 export const CLIENT_STATUS_COLORS = {

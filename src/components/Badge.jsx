@@ -3,7 +3,7 @@ import { PROSPECT_STATUS_COLORS, CLIENT_STATUS_COLORS } from '../lib/constants'
 
 const PROSPECT_LABELS = {
   nuevo: 'Nuevo', msg1: 'Msg 1', msg2: 'Msg 2', msg3: 'Msg 3',
-  diagnostico: 'Diagnóstico', propuesta: 'Propuesta', cerrado: 'Cerrado',
+  diagnostico: 'Diagnóstico', propuesta: 'Propuesta', cerrado: 'Cerrado', archivado: 'Archivado',
 }
 
 const CLIENT_LABELS = {

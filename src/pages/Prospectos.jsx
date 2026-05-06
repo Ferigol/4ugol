@@ -7,7 +7,7 @@ import KanbanBoard from '../components/KanbanBoard'
 import KanbanCard from '../components/KanbanCard'
 import Modal from '../components/Modal'
 import Badge, { LangBadge } from '../components/Badge'
-import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X, LayoutGrid, List, ChevronRight, ChevronUp, ChevronDown, UserCheck } from 'lucide-react'
+import { Plus, MessageSquare, Copy, Check, Loader2, Download, ArrowLeft, Search, X, LayoutGrid, List, ChevronRight, ChevronUp, ChevronDown, UserCheck, Archive } from 'lucide-react'
 import { downloadProspectFichas } from '../lib/downloadFichas'
 
 const MSG_DATE_FIELDS = { msg1: 'msg1_fecha', msg2: 'msg2_fecha', msg3: 'msg3_fecha' }
@@ -105,6 +105,7 @@ const DaysBadge = ({ days }) => {
 }
 
 const COL_TEMPLATE = '40px 1fr 64px 110px 100px 96px 110px 60px 28px'
+const ARCHIVED_COL_TEMPLATE = '40px 1fr 130px 120px 110px'
 
 export default function Prospectos() {
   const navigate = useNavigate()
@@ -157,7 +158,7 @@ export default function Prospectos() {
     return () => document.removeEventListener('keydown', onKey)
   }, [])
 
-  const baseItems = items.filter(i => i.status !== 'convertido')
+  const baseItems = items.filter(i => i.status !== 'convertido' && i.status !== 'archivado')
   const filteredItems = searchQuery.trim()
     ? baseItems.filter(i => i.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : baseItems
@@ -166,6 +167,8 @@ export default function Prospectos() {
     () => filteredItems.filter(i => { const d = daysSince(getLastContactDate(i)); return d !== null && d > 7 }).length,
     [filteredItems]
   )
+
+  const archivedItems = useMemo(() => items.filter(i => i.status === 'archivado'), [items])
 
   const listItems = useMemo(() => {
     if (activeFilter === 'convertido') {
@@ -220,7 +223,14 @@ export default function Prospectos() {
 
   const toggleView = (mode) => {
     setViewMode(mode)
-    localStorage.setItem('prospectos-view', mode)
+    if (mode !== 'archived') localStorage.setItem('prospectos-view', mode)
+  }
+
+  const handleUnarchive = async (item) => {
+    const newStatus = item.archived_prev_status || 'msg1'
+    setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus, archived_at: null, archived_prev_status: null } : i))
+    const { error } = await supabase.from('prospects').update({ status: newStatus, archived_at: null, archived_prev_status: null }).eq('id', item.id)
+    if (error) await supabase.from('prospects').update({ status: newStatus }).eq('id', item.id)
   }
 
   const openAdd = (status = 'nuevo') => {
@@ -256,6 +266,14 @@ export default function Prospectos() {
         msg2_fecha: form.msg2_fecha || null,
         msg3_fecha: form.msg3_fecha || null,
         followup_date: form.followup_date || null,
+      }
+
+      if (editingId && form.status === 'archivado') {
+        const prevItem = items.find(i => i.id === editingId)
+        if (prevItem?.status !== 'archivado') {
+          payload.archived_prev_status = prevItem?.status || null
+          payload.archived_at = todayDate()
+        }
       }
 
       const stripMissingCol = (p, err) => {
@@ -465,6 +483,19 @@ export default function Prospectos() {
               <List size={16} />
             </button>
           </div>
+
+          <button
+            onClick={() => toggleView(viewMode === 'archived' ? (localStorage.getItem('prospectos-view') || 'kanban') : 'archived')}
+            title="Ver archivados"
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === 'archived'
+                ? 'bg-[#1a1a1a] border-[#444] text-[#999]'
+                : 'border-[#222] text-[#444] hover:text-[#888] hover:border-[#333]'
+            }`}
+          >
+            <Archive size={13} />
+            Archivados ({archivedItems.length})
+          </button>
 
           <button
             onClick={() => downloadProspectFichas(items)}
@@ -699,6 +730,67 @@ export default function Prospectos() {
         </div>
       )}
 
+      {/* ── Archived view ── */}
+      {viewMode === 'archived' && (
+        <div className="flex flex-col gap-3">
+          <div className="rounded-2xl border border-[#1e1e1e] overflow-hidden">
+            <div
+              className="grid gap-4 px-4 py-3 bg-[#0a0a0a] border-b border-[#222]"
+              style={{ gridTemplateColumns: ARCHIVED_COL_TEMPLATE }}
+            >
+              <div />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Nombre</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Estado ant.</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#666]">Archivado</span>
+              <div />
+            </div>
+
+            {archivedItems.length === 0 ? (
+              <div className="py-12 text-center text-sm text-[#333] bg-[#0f0f0f]">
+                No hay prospectos archivados.
+              </div>
+            ) : archivedItems.map((item, idx) => (
+              <div
+                key={item.id}
+                className="grid gap-4 px-4 py-3 items-center bg-[#0f0f0f] hover:bg-[#1a1a1a] transition-colors"
+                style={{ gridTemplateColumns: ARCHIVED_COL_TEMPLATE, borderTop: idx > 0 ? '0.5px solid #222' : 'none' }}
+              >
+                <ProspectAvatar name={item.name} />
+
+                <button onClick={() => openEdit(item)} className="text-left min-w-0 cursor-pointer">
+                  <p className="text-sm font-semibold text-white truncate leading-tight">{item.name}</p>
+                  {item.club && <p className="text-xs text-[#555] truncate mt-0.5">{item.club}</p>}
+                </button>
+
+                <div>
+                  {item.archived_prev_status
+                    ? <Badge type="prospect" value={item.archived_prev_status} />
+                    : <span className="text-xs text-[#333]">—</span>
+                  }
+                </div>
+
+                <div className="text-xs text-[#555]">
+                  {item.archived_at ? formatMsgDate(item.archived_at) : <span className="text-[#333]">—</span>}
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => handleUnarchive(item)}
+                    className="px-2 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer bg-[#111] text-[#555] border border-[#222] hover:border-[#E8410A]/40 hover:text-[#E8410A]"
+                  >
+                    Desarchivar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-[#444] px-1">
+            {archivedItems.length} prospecto{archivedItems.length !== 1 ? 's' : ''} archivado{archivedItems.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+      )}
+
       {/* Add/Edit Modal */}
       <Modal isOpen={modalForm} onClose={() => setModalForm(false)} title={editingId ? 'Editar prospecto' : 'Nuevo prospecto'}>
         <div className="space-y-4">
@@ -753,6 +845,7 @@ export default function Prospectos() {
               <label className={LBL}>Estado</label>
               <select className={SEL} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                 {PROSPECT_COLUMNS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                <option value="archivado">Archivado</option>
               </select>
             </div>
             <div>

@@ -174,6 +174,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!prospects.length) return
     const urgentCount = prospects.filter(p => {
+      if (p.status === 'archivado' || p.status === 'convertido') return false
       const d = daysSince(getLastContactDate(p))
       return d !== null && d > 7
     }).length
@@ -190,7 +191,7 @@ export default function Dashboard() {
   const remaining     = Math.max(MRR_GOAL - mrr, 0)
   const clientsNeeded = remaining > 0 ? Math.ceil(remaining / PACK_PRICES['4-3-3']) : 0
   const activeClients   = clients.filter(c => c.status !== 'pagado').length
-  const activeProspects = prospects.filter(p => p.status !== 'cerrado').length
+  const activeProspects = prospects.filter(p => !['cerrado', 'convertido', 'archivado'].includes(p.status)).length
 
   const pendingFollowUps = prospects
     .filter(p => FOLLOW_UP_STATUSES.includes(p.status))
@@ -226,7 +227,8 @@ export default function Dashboard() {
     p.followup_date &&
     p.followup_date <= todayLocal &&
     p.status !== 'cerrado' &&
-    p.status !== 'convertido'
+    p.status !== 'convertido' &&
+    p.status !== 'archivado'
   )
 
   const now = new Date()
